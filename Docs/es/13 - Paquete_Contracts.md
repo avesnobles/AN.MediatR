@@ -32,7 +32,7 @@ Y eso es **todo el paquete**. Cinco archivos. Sin lógica — solo marcadores y 
 ```
 
 - **Solo netstandard2.0**. Al no tener lógica, un único target es suficiente y lo hace accesible desde cualquier runtime moderno o legacy.
-- **Licencia Apache-2.0**. Deliberadamente permisiva — porque el paquete principal `MediatR` es RPL-1.5 o comercial, y necesitas los tipos de request/notification usables en cualquier proyecto sin restricciones de licenciamiento.
+- **Licencia Apache-2.0**. En AN.MediatR ambos paquetes son Apache-2.0; históricamente el paquete de contratos se separó para que los tipos de request/notification pudieran vivir en librerías solo-contrato sin fricción de licenciamiento. En el upstream v13+ el paquete principal pasó a RPL-1.5 / comercial, haciendo esa separación crítica — AN.MediatR mantiene la misma división por consistencia y para que las librerías solo-contratos sigan siendo ultra-ligeras (sin DI, sin MinVer, grafo de dependencias minúsculo).
 - **Versión fija `2.0.1`** — no guiada por el versionado `MinVer` del paquete principal. Se espera que los contratos sean estables.
 - **Namespace `MediatR`** — mismo namespace que la librería principal, así que los consumidores solo escriben `using MediatR;` sin importar qué paquete define un tipo.
 
@@ -40,11 +40,9 @@ Y eso es **todo el paquete**. Cinco archivos. Sin lógica — solo marcadores y 
 
 ## Por qué un paquete separado
 
-### 1. Licenciamiento independiente
+### 1. Grafo de dependencias más ligero para proyectos solo-contrato
 
-La librería principal `MediatR` se distribuye bajo RPL 1.5 (o licencia comercial — ver [Licenciamiento](13%20-%20Licenciamiento.md) y `LICENSE.md`). El paquete de contratos es Apache-2.0, mucho más permisiva.
-
-Esta dicotomía te permite definir tus tipos de request y notification en **cualquier** librería downstream — incluso librerías que no pueden aceptar dependencia RPL — sin arrastrar el binario principal.
+`MediatR.Contracts` tiene **cero** dependencias en runtime; `MediatR` depende de `MediatR.Contracts` más `Microsoft.Extensions.DependencyInjection.Abstractions`. Las librerías que solo necesitan declarar tipos `IRequest` / `INotification` (contratos API, contratos gRPC, clientes Blazor WASM) pueden referenciar el paquete pequeño y distribuir menos ensamblados transitivos.
 
 ### 2. Proyectos de contratos de API
 

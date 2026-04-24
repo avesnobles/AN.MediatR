@@ -1,6 +1,6 @@
 # Dependency Injection
 
-AN.MediatR integrates natively with `Microsoft.Extensions.DependencyInjection` via the `AddMediatR` extension method. Other containers (Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor) are supported through adapter patterns shown in the `samples/` folder — see [DI Container Integration](16%20-%20DI_Container_Integration.md).
+AN.MediatR integrates natively with `Microsoft.Extensions.DependencyInjection` via the `AddMediatR` extension method. Other containers (Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor) are supported through adapter patterns shown in the `samples/` folder — see [DI Container Integration](15%20-%20DI_Container_Integration.md).
 
 This document focuses on the native `IServiceCollection` integration.
 
@@ -11,7 +11,7 @@ This document focuses on the native `IServiceCollection` integration.
 ```csharp
 namespace Microsoft.Extensions.DependencyInjection;
 
-public static class MediatRServiceCollectionExtensions
+public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMediatR(
         this IServiceCollection services,
@@ -23,7 +23,7 @@ public static class MediatRServiceCollectionExtensions
 }
 ```
 
-Source: [src/MediatR/MicrosoftExtensionsDI/MediatRServiceCollectionExtensions.cs](../../src/MediatR/MicrosoftExtensionsDI/MediatRServiceCollectionExtensions.cs).
+Source: [src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs](../../src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs).
 
 > The extensions live in the `Microsoft.Extensions.DependencyInjection` namespace so you don't need an extra `using` once you have `AddControllers()`, `AddLogging()`, etc.
 
@@ -45,13 +45,12 @@ Equivalent to: "scan the current assembly for every handler / behavior / process
 1. **`IMediator`** → `Mediator` (lifetime = configuration, default `Transient`).
 2. **`ISender`** and **`IPublisher`** → factory that returns the resolved `IMediator` (so they share the same instance per scope).
 3. **`MediatRServiceConfiguration`** as a singleton (for downstream introspection).
-4. **`LicenseAccessor`** and **`LicenseValidator`** as singletons (require `ILoggerFactory`).
-5. **`INotificationPublisher`** based on `cfg.NotificationPublisher` or `cfg.NotificationPublisherType`.
-6. **All discovered `IRequestHandler<>`, `IRequestHandler<,>`, `INotificationHandler<>`, `IStreamRequestHandler<,>`** as transient.
-7. **All discovered `IRequestExceptionHandler<,,>`, `IRequestExceptionAction<,>`** as transient (multi-instance).
-8. **Pre/post-processor decorators** (if any processor was registered).
-9. **Exception action / handler decorators** (if any exception handler / action exists — controlled by `RequestExceptionActionProcessorStrategy`).
-10. **All explicitly added pipeline and stream behaviors** via `cfg.BehaviorsToRegister` / `cfg.StreamBehaviorsToRegister`.
+4. **`INotificationPublisher`** based on `cfg.NotificationPublisher` or `cfg.NotificationPublisherType`.
+5. **All discovered `IRequestHandler<>`, `IRequestHandler<,>`, `INotificationHandler<>`, `IStreamRequestHandler<,>`** as transient.
+6. **All discovered `IRequestExceptionHandler<,,>`, `IRequestExceptionAction<,>`** as transient (multi-instance).
+7. **Pre/post-processor decorators** (if any processor was registered).
+8. **Exception action / handler decorators** (if any exception handler / action exists — controlled by `RequestExceptionActionProcessorStrategy`).
+9. **All explicitly added pipeline and stream behaviors** via `cfg.BehaviorsToRegister` / `cfg.StreamBehaviorsToRegister`.
 
 Assembly-scanning is not idempotent by default — `AddMediatR` can be called multiple times, each scanning a different set of assemblies, but prefer calling it once with all assemblies.
 
@@ -110,14 +109,6 @@ cfg.NotificationPublisherType = typeof(TelemetryPublisher); // DI-resolved, over
 ```
 
 See [Notification Publishers](09%20-%20Notification_Publishers.md).
-
-### License key
-
-```csharp
-cfg.LicenseKey = "<JWT>";
-```
-
-Alternatively set `Mediator.LicenseKey` statically. See [Licensing](13%20-%20Licensing.md).
 
 ### Auto-register processors
 
@@ -183,7 +174,7 @@ public static IServiceCollection AddMediatR(this IServiceCollection services, Me
 
 1. Copy the limits from the configuration into `ServiceRegistrar` static fields.
 2. Scan all assemblies under a `CancellationTokenSource` with `RegistrationTimeout` — any timeout translates into `TimeoutException`.
-3. Register the required services (mediator, publisher, licensing, behaviors, processors, exception decorators).
+3. Register the required services (mediator, publisher, behaviors, processors, exception decorators).
 
 ### Inside `AddMediatRClasses`
 
@@ -200,25 +191,14 @@ Which:
 3. For each closed interface implemented (e.g. `IRequestHandler<CreateOrder, int>`), registers the concretion. If `addIfAlreadyExists == false` (single-handler interfaces) it uses `TryAddTransient` (first wins); if `true` (multi-instance interfaces like notification handlers) it uses `AddTransient` (all registered).
 4. For open-generic interfaces, calls `AddAllConcretionsThatClose` which generates every valid combination of request types × open-generic handler types and registers each one.
 
-After that, it makes a second pass for **multi-open-generic handlers** (open-generic notification handlers, exception handlers, actions, and — if auto-register enabled — processors) and registers the open-generic-to-open-generic mapping directly:
-
-```csharp
-foreach (var multiOpenInterface in new[]
-    { typeof(INotificationHandler<>), typeof(IRequestExceptionHandler<,,>), typeof(IRequestExceptionAction<,>), ... })
-{
-    foreach (var type in scannedOpenConcretions)
-    {
-        services.AddTransient(multiOpenInterface, type);
-    }
-}
-```
+After that, it makes a second pass for **multi-open-generic handlers** (open-generic notification handlers, exception handlers, actions, and — if auto-register enabled — processors) and registers the open-generic-to-open-generic mapping directly.
 
 ### Why the limits matter
 
 `GenerateCombinations` explores every valid closing of a generic handler's type parameters. For a handler like:
 
 ```csharp
-public class LoggingHandler<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
+public class GenericHandler<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 ```
 
@@ -232,16 +212,6 @@ The limits therefore act as **guard rails**:
 - `RegistrationTimeout`: a hard wall-clock limit on the whole registration process (default 15 seconds).
 
 Any violation throws a descriptive exception. Set a limit to `0` to disable.
-
-### Handler precedence inside `ConnectImplementationsToTypesClosing`
-
-When multiple concrete handlers match a closed interface, the registrar uses `IsMatchingWithInterface` to keep only those whose generic type arguments exactly match the interface's. This prevents a generic `Handler<TRequest, TResponse>` from being registered for every concrete request when a more specific handler exists.
-
-### `HasNestedGenericResponseType` and explicit closing
-
-For open pipeline behaviors whose `TResponse` is itself a generic (e.g. `IPipelineBehavior<TRequest, Result<T>>`), the DI container can't derive the closing. `ServiceRegistrar.RegisterClosedBehaviorsFromAssemblies` walks the scanned assemblies for every `IRequest<Result<X>>`, matches the pattern, and registers an explicitly closed behavior for that pair.
-
-This is transparent — you just register the open behavior and it Just Works for nested generics.
 
 ---
 
@@ -258,33 +228,17 @@ public static void AddRequiredServices(IServiceCollection services, MediatRServi
     services.TryAdd(new ServiceDescriptor(typeof(IPublisher),
         sp => sp.GetRequiredService<IMediator>(), serviceConfiguration.Lifetime));
 
-    // 2) License check flag reset
-    MediatRServiceCollectionExtensions.LicenseChecked = false;
-
-    // 3) Configuration + license accessor + validator (singletons, require ILoggerFactory)
+    // 2) Configuration singleton
     services.TryAddSingleton(serviceConfiguration);
-    services.TryAddSingleton<LicenseAccessor>(sp =>
-    {
-        var loggerFactory = sp.GetService<ILoggerFactory>()
-            ?? throw new InvalidOperationException("MediatR requires ILoggerFactory to be registered. Call services.AddLogging() before services.AddMediatR().");
-        var config = sp.GetService<MediatRServiceConfiguration>();
-        return config != null ? new LicenseAccessor(config, loggerFactory) : new LicenseAccessor(loggerFactory);
-    });
-    services.TryAddSingleton<LicenseValidator>(sp =>
-    {
-        var loggerFactory = sp.GetService<ILoggerFactory>()
-            ?? throw new InvalidOperationException("MediatR requires ILoggerFactory to be registered. Call services.AddLogging() before services.AddMediatR().");
-        return new LicenseValidator(loggerFactory);
-    });
 
-    // 4) Notification publisher
+    // 3) Notification publisher
     var descriptor = serviceConfiguration.NotificationPublisherType != null
         ? new ServiceDescriptor(typeof(INotificationPublisher),
               serviceConfiguration.NotificationPublisherType, serviceConfiguration.Lifetime)
         : new ServiceDescriptor(typeof(INotificationPublisher), serviceConfiguration.NotificationPublisher);
     services.TryAdd(descriptor);
 
-    // 5) Exception behaviors (order depends on strategy)
+    // 4) Exception behaviors (order depends on strategy)
     if (serviceConfiguration.RequestExceptionActionProcessorStrategy == RequestExceptionActionProcessorStrategy.ApplyForUnhandledExceptions)
     {
         RegisterBehaviorIfImplementationsExist(services,
@@ -300,7 +254,7 @@ public static void AddRequiredServices(IServiceCollection services, MediatRServi
             typeof(RequestExceptionActionProcessorBehavior<,>), typeof(IRequestExceptionAction<,>));
     }
 
-    // 6) Pre/post-processor behaviors
+    // 5) Pre/post-processor behaviors
     if (serviceConfiguration.RequestPreProcessorsToRegister.Any())
     {
         services.TryAddEnumerable(new ServiceDescriptor(typeof(IPipelineBehavior<,>),
@@ -314,28 +268,13 @@ public static void AddRequiredServices(IServiceCollection services, MediatRServi
         services.TryAddEnumerable(serviceConfiguration.RequestPostProcessorsToRegister);
     }
 
-    // 7) Explicit pipeline behaviors
+    // 6) Explicit pipeline behaviors
     foreach (var serviceDescriptor in serviceConfiguration.BehaviorsToRegister)
-    {
         services.TryAddEnumerable(serviceDescriptor);
 
-        // Special case: nested-generic response types need explicit closing
-        if (serviceDescriptor.ImplementationType != null
-            && serviceDescriptor.ServiceType == typeof(IPipelineBehavior<,>)
-            && serviceDescriptor.ImplementationType.IsOpenGeneric()
-            && HasNestedGenericResponseType(serviceDescriptor.ImplementationType))
-        {
-            RegisterClosedBehaviorsFromAssemblies(
-                serviceDescriptor.ImplementationType, services,
-                serviceConfiguration.AssembliesToRegister, serviceDescriptor.Lifetime);
-        }
-    }
-
-    // 8) Explicit stream behaviors
+    // 7) Explicit stream behaviors
     foreach (var sd in serviceConfiguration.StreamBehaviorsToRegister)
-    {
         services.TryAddEnumerable(sd);
-    }
 }
 ```
 
@@ -343,8 +282,8 @@ public static void AddRequiredServices(IServiceCollection services, MediatRServi
 
 ## Requirements
 
-- **`ILoggerFactory` must be registered before `AddMediatR`**. If you forget, `LicenseAccessor` / `LicenseValidator` will throw `InvalidOperationException` on first resolution. The simplest fix is `services.AddLogging();`.
 - **At least one assembly** must be passed via `RegisterServicesFromAssembly(...)` or its variants.
+- No other DI services are required. There is **no `ILoggerFactory` requirement** — AN.MediatR does not do any logging on its own.
 
 ---
 
@@ -354,8 +293,7 @@ If you call `AddMediatR(...)` twice:
 
 - The second call repeats assembly scanning — handlers that were already registered as `Transient` via `TryAddTransient` are not re-added (idempotent).
 - Multi-instance interfaces (notification handlers, exception handlers, actions) **will** get duplicates if the same assembly is scanned twice. The wrapper's `GroupBy(x => x.GetType()).Select(g => g.First())` deduplicates notification handlers at dispatch time.
-- `ServiceRegistrar.AddRequiredServices` uses `TryAdd`, so `IMediator`, `ISender`, `IPublisher`, license services, and the publisher are only registered once.
-- The license check flag is **reset** to `false` on every call, so the license is re-validated on the next `Mediator` construction.
+- `ServiceRegistrar.AddRequiredServices` uses `TryAdd`, so `IMediator`, `ISender`, `IPublisher`, and the publisher are only registered once.
 
 Best practice: a single `AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(asm1, asm2, ...))` call with every assembly.
 
@@ -377,8 +315,6 @@ foreach (var sd in services)
 }
 ```
 
-Alternatively, hook into the `ILogger` with category `LuckyPennySoftware.MediatR.License` to see licensing state, and turn on `Information`-level logging for DI diagnostics.
-
 ---
 
 ## Container-specific notes
@@ -396,4 +332,4 @@ Every DI container has its own quirks for open generics and scanning. Check the 
 | Stashbox | `samples/MediatR.Examples.Stashbox/` |
 | Castle Windsor | `samples/MediatR.Examples.Windsor/` |
 
-For each, see [DI Container Integration](16%20-%20DI_Container_Integration.md).
+For each, see [DI Container Integration](15%20-%20DI_Container_Integration.md).

@@ -20,8 +20,6 @@ public class Mediator : IMediator
     private static readonly ConcurrentDictionary<Type, NotificationHandlerWrapper> _notificationHandlers = new();
     private static readonly ConcurrentDictionary<Type, StreamRequestHandlerBase> _streamRequestHandlers = new();
 
-    public static string? LicenseKey { get; set; }
-
     public Mediator(IServiceProvider serviceProvider)
         : this(serviceProvider, new ForeachAwaitPublisher()) { }
 
@@ -29,20 +27,16 @@ public class Mediator : IMediator
     {
         _serviceProvider = serviceProvider;
         _publisher = publisher;
-        _serviceProvider.CheckLicense();
     }
 }
 ```
 
-Tres cosas a destacar:
+Dos cosas a destacar:
 
 1. **Dos campos privados**: un `IServiceProvider` (para resolver handlers y comportamientos en cada llamada) y un `INotificationPublisher` (la estrategia para dispatch multi-handler).
 2. **Tres diccionarios estáticos**: son las **cachés globales de wrappers**, compartidas entre todas las instancias de `Mediator` del proceso. La clave es el tipo **en runtime** de un mensaje; el valor es un wrapper cacheado que sabe cómo invocar handlers para ese tipo.
-3. **Comprobación de licencia en la construcción**: cada instancia nueva de `Mediator` llama a `_serviceProvider.CheckLicense()`, que valida perezosamente la licencia **una vez por aplicación** (protegido por una bandera estática interna). Ver [Licenciamiento](13%20-%20Licenciamiento.md).
 
-Los dos constructores forman una pequeña **cadena**: si no pasas `INotificationPublisher`, obtienes `ForeachAwaitPublisher` (ejecución secuencial de handlers).
-
-`LicenseKey` es una propiedad `public static` — puedes establecerla en runtime desde cualquier sitio (`Mediator.LicenseKey = "..."`), útil para escenarios cliente como Blazor WASM que no pasan por configuración DI.
+Los dos constructores forman una pequeña **cadena**: si no pasas `INotificationPublisher`, obtienes `ForeachAwaitPublisher` (ejecución secuencial de handlers). El constructor no realiza ningún otro trabajo — sin check de licencia, sin llamadas de red, sin logging.
 
 ---
 

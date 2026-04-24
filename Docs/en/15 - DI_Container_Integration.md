@@ -34,7 +34,7 @@ var mediator = provider.GetRequiredService<IMediator>();
 
 Notes:
 
-- `services.AddLogging()` is mandatory. It's built into `WebApplicationBuilder` / `HostBuilder` but must be added explicitly in a raw `ServiceCollection`.
+- `services.AddLogging()` is optional — AN.MediatR itself does no logging, but most applications want it anyway.
 - `AddMediatR` can register open-generic behaviors directly through `cfg.AddOpenBehavior(typeof(GenericPipelineBehavior<,>))`, but using `services.AddScoped(typeof(IPipelineBehavior<,>), typeof(GenericPipelineBehavior<,>))` after `AddMediatR` also works.
 
 ---
@@ -74,7 +74,6 @@ Autofac-specific callouts:
 
 - Open generics are registered with `RegisterGeneric(...).As(typeof(Interface<,>))`.
 - `AsClosedTypesOf(...)` finds every closed instance of an open generic interface in an assembly — exactly what AN.MediatR's `ServiceRegistrar` does, just with Autofac semantics.
-- To get licensing, supply an `ILoggerFactory` via `Autofac.Extensions.DependencyInjection` or register it manually.
 
 ---
 
@@ -236,29 +235,19 @@ var mediator = container.Resolve<IMediator>();
 
 ## Common pitfalls across containers
 
-### 1. Missing `ILoggerFactory`
-
-`LicenseAccessor` and `LicenseValidator` require `ILoggerFactory` (see [Licensing](13%20-%20Licensing.md)). If your container doesn't have one, you'll get:
-
-```
-InvalidOperationException: MediatR requires ILoggerFactory to be registered. Call services.AddLogging() before services.AddMediatR().
-```
-
-Fix: register `ILoggerFactory` (and a logger provider such as `Microsoft.Extensions.Logging.Console`) before resolving `IMediator`.
-
-### 2. Single-instance notification registration
+### 1. Single-instance notification registration
 
 Many containers register only the first matching implementation by default for a given interface. For `INotificationHandler<>` you explicitly need collection-style registration (`AllowMultipleMatches`, `Collection.Register`, `RegisterMany`, etc.). Otherwise `mediator.Publish(...)` silently invokes only one handler.
 
-### 3. Scoping `IMediator` vs. `IServiceProvider`
+### 2. Scoping `IMediator` vs. `IServiceProvider`
 
 If you register `IMediator` as a scoped service, you must **resolve it within a scope**. Most containers expose a child-scope API — prefer scoped for ASP.NET Core, transient for console/host scenarios. For classic ASP.NET (pre-Core) use `PerRequest` or equivalent.
 
-### 4. Open-generic behavior registration
+### 3. Open-generic behavior registration
 
-If your behavior has a nested-generic response type (e.g. `IPipelineBehavior<TRequest, Result<T>>`), most containers cannot auto-close it. AN.MediatR's native registrar handles this via `RegisterClosedBehaviorsFromAssemblies`; for third-party containers, you may need to register each closed variant manually or use container-specific open-generic closing features.
+If your behavior has a nested-generic response type (e.g. `IPipelineBehavior<TRequest, Result<T>>`), most containers cannot auto-close it. For third-party containers, you may need to register each closed variant manually or use container-specific open-generic closing features.
 
-### 5. Caching of wrappers
+### 4. Caching of wrappers
 
 The `Mediator` class holds `static ConcurrentDictionary` caches **per process**. The choice of DI container doesn't affect that — but if you spin up multiple containers in the same process (integration tests!) the caches are shared. Normally this is fine because the wrappers are stateless.
 
@@ -273,8 +262,6 @@ Regardless of container, make sure:
 - [ ] `IServiceProvider` is available (either the container's own or an adapter — `Microsoft.Extensions.DependencyInjection.Abstractions` support is mandatory).
 - [ ] `INotificationHandler<T>` is registered as a **collection** / `AllowMultipleMatches`.
 - [ ] `IPipelineBehavior<,>` and `IStreamPipelineBehavior<,>` are registered as collections, with order preserved.
-- [ ] `ILoggerFactory` is reachable.
-- [ ] `LicenseAccessor` and `LicenseValidator` are singletons (or equivalently cached).
 
 If you tick all those boxes, `Mediator.Send(...)` / `Publish(...)` / `CreateStream(...)` will behave identically to the native DI path.
 

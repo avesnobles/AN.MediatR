@@ -183,29 +183,18 @@ If `IMediator` is scoped (common in ASP.NET Core), don't pass it to `Task.Run(..
 
 ### What's the difference between AN.MediatR and jbogard/MediatR?
 
-Functionally identical core + **JWT licensing subsystem** (see [Licensing](13%20-%20Licensing.md)). Source differences:
+AN.MediatR is a **free and open-source fork** based on **MediatR v12.5**, the last Apache-2.0 licensed release before the upstream project (v13+, now owned by Lucky Penny Software) switched to a commercial/RPL-1.5 dual licensing model with a JWT-based runtime license check.
 
-- `src/MediatR/Licensing/*` (new in AN.MediatR).
-- `Mediator.CheckLicense()` invocation in the constructor.
-- `MediatRServiceConfiguration.LicenseKey`.
-- `Mediator.LicenseKey` static property.
-- Embedded build date in the assembly.
-- Documentation and license files reference Lucky Penny Software.
+At the fork point (v12.5) the two codebases are identical. Going forward:
 
-Runtime differences:
+- AN.MediatR stays Apache-2.0. No runtime license validation. No JWT. No logging category `LuckyPennySoftware.MediatR.License`.
+- AN.MediatR has no `Licensing/` folder, no `Mediator.LicenseKey` property, no `cfg.LicenseKey` setting, no `LicenseAccessor` / `LicenseValidator` / `BuildInfo` types.
+- The AN team will evolve the library independently from upstream — bug fixes, performance improvements, new features — without tracking every upstream change.
+- Upstream (jbogard/MediatR v13+) has gained a JWT licensing subsystem and is a commercial product. Features added there after v12.5 are not automatically ported here.
 
-- A **log warning** appears on startup when no license key is configured. The app still works.
-- If `ILoggerFactory` is missing from DI, you get an actionable `InvalidOperationException` at startup.
+### Do I need a license to use AN.MediatR?
 
-### Do I need a license for development / CI?
-
-No. The license check is informational for dev/test/CI — you'll see a warning in logs but the library functions normally. Production use requires a license per the licensing terms in `LICENSE.md`.
-
-### How do I silence the license warning?
-
-```csharp
-builder.Logging.AddFilter("LuckyPennySoftware.MediatR.License", LogLevel.None);
-```
+No. AN.MediatR is Apache-2.0. You can use it in any project, commercial or otherwise, subject to the Apache-2.0 terms (which are minimal).
 
 ### Can I use `IRequest<TResponse>` where `TResponse` is a value type / record struct?
 
@@ -279,13 +268,9 @@ Yes. Subclass it and set `cfg.MediatorImplementationType = typeof(MyMediator)`. 
 
 Trimming is possible with care: every handler must be **root-reachable** for the IL linker. Explicit registration (instead of assembly scanning) helps. AOT support is not officially advertised — the library uses reflection in `ServiceRegistrar` and `Mediator`, so verify with your specific scenario.
 
-### Where is the AutoMapper support?
-
-Lucky Penny also produces AutoMapper. The `ProductType.AutoMapper` enum value and `ProductType.Bundle` (accepted by MediatR's validator) hint at the combined licensing story — but no AutoMapper code lives in this repository.
-
 ### What's `Unit` for?
 
-A stand-in for `void` in generic contexts. `Task<Unit>` is a valid type; `Task<void>` is not. See [Contracts Package](14%20-%20Contracts_Package.md).
+A stand-in for `void` in generic contexts. `Task<Unit>` is a valid type; `Task<void>` is not. See [Contracts Package](13%20-%20Contracts_Package.md).
 
 ---
 
@@ -300,6 +285,6 @@ A stand-in for `void` in generic contexts. `Task<Unit>` is a valid type; `Task<v
 
 ## Further reading
 
-- [MediatR wiki](https://github.com/LuckyPennySoftware/MediatR/wiki) — more examples and patterns.
+- [Original MediatR wiki](https://github.com/jbogard/MediatR/wiki) — more examples and patterns (most still applies).
 - [Jimmy Bogard's posts](https://www.jimmybogard.com/) — the original author's writing on CQRS and mediator patterns.
 - `samples/MediatR.Examples.*` — runnable demos in the repo.

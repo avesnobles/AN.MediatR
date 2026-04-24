@@ -1,10 +1,10 @@
 # AN.MediatR Documentation
 
-Welcome to the full documentation of **AN.MediatR**, a fork of the well-known [MediatR](https://github.com/jbogard/MediatR) library originally created by **Jimmy Bogard** and currently maintained as a commercial product by **Lucky Penny Software** (the organization behind the **Aves Nobles** / **AN** ecosystem).
+Welcome to the full documentation of **AN.MediatR**, a free and open-source fork of the well-known [MediatR](https://github.com/jbogard/MediatR) library originally created by **Jimmy Bogard**.
 
-AN.MediatR is a **simple, unambitious mediator implementation for .NET**. It provides in-process messaging with zero external dependencies beyond `Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Extensions.Logging.Abstractions`, supporting request/response, commands, queries, notifications, events, and streaming — both synchronous and asynchronous — with intelligent dispatching via C# generic variance.
+This fork is based on **MediatR v12.5** — the **last Apache-2.0 licensed** release before the upstream project moved to a commercial licensing model — and is maintained by the **Aves Nobles (AN)** team. From v12.5 onwards, AN.MediatR will diverge from the upstream `jbogard/MediatR` and evolve as an independent open-source library.
 
-This fork adds an **enterprise licensing system** (JWT-based) on top of the original open-source mediator, which is the key functional difference against the upstream `jbogard/MediatR`.
+AN.MediatR is a **simple, unambitious mediator implementation for .NET**. It provides in-process messaging with zero external dependencies beyond `Microsoft.Extensions.DependencyInjection.Abstractions`, supporting request/response, commands, queries, notifications, events, and streaming — both synchronous and asynchronous — with intelligent dispatching via C# generic variance.
 
 ---
 
@@ -24,13 +24,12 @@ This fork adds an **enterprise licensing system** (JWT-based) on top of the orig
 | [Streaming](10%20-%20Streaming.md) | `IStreamRequest`, `IStreamRequestHandler`, stream pipeline behaviors |
 | [Dependency Injection](11%20-%20Dependency_Injection.md) | `AddMediatR`, `MediatRServiceConfiguration`, `ServiceRegistrar`, assembly scanning, generic limits |
 | [Wrappers and Internals](12%20-%20Wrappers_and_Internals.md) | Type-erasure wrappers, `HandlersOrderer`, `ObjectDetails` |
-| [Licensing](13%20-%20Licensing.md) | Lucky Penny licensing system — JWT, editions, perpetual licenses |
-| [Contracts Package](14%20-%20Contracts_Package.md) | `MediatR.Contracts` NuGet package and `TypeForwardings` |
-| [Usage Examples](15%20-%20Usage_Examples.md) | Typical scenarios with code: Ping/Pong, notifications, streams, exceptions |
-| [DI Container Integration](16%20-%20DI_Container_Integration.md) | ASP.NET Core, Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
-| [Build, Test & Publish](17%20-%20Build_Test_Publish.md) | `Build.ps1`, `BuildContracts.ps1`, `Push.ps1`, tests, benchmarks, signing |
-| [Best Practices & FAQ](18%20-%20Best_Practices_and_FAQ.md) | Patterns, anti-patterns, common questions |
-| [Glossary](19%20-%20Glossary.md) | Glossary of terms used throughout the documentation |
+| [Contracts Package](13%20-%20Contracts_Package.md) | `MediatR.Contracts` NuGet package and `TypeForwardings` |
+| [Usage Examples](14%20-%20Usage_Examples.md) | Typical scenarios with code: Ping/Pong, notifications, streams, exceptions |
+| [DI Container Integration](15%20-%20DI_Container_Integration.md) | ASP.NET Core, Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
+| [Build, Test & Publish](16%20-%20Build_Test_Publish.md) | `Build.ps1`, `BuildContracts.ps1`, `Push.ps1`, tests, benchmarks |
+| [Best Practices & FAQ](17%20-%20Best_Practices_and_FAQ.md) | Patterns, anti-patterns, common questions |
+| [Glossary](18%20-%20Glossary.md) | Glossary of terms used throughout the documentation |
 
 ---
 
@@ -38,11 +37,10 @@ This fork adds an **enterprise licensing system** (JWT-based) on top of the orig
 
 Depending on your role, prioritize different documents:
 
-- **New application developer** (using MediatR in their app): 03 → 04 → 15 → 06 → 07 → 09 → 11 → 18
-- **Library contributor / Maintainer**: 01 → 02 → 05 → 12 → 11 → 08 → 13 → 17
-- **DevOps / Release engineer**: 02 → 17 → 13 → 14
-- **Architect / CQRS lead**: 03 → 06 → 09 → 10 → 18
-- **License administrator / Procurement**: 13 → 14 → 18
+- **New application developer** (using MediatR in their app): 03 → 04 → 14 → 06 → 07 → 09 → 11 → 17
+- **Library contributor / Maintainer**: 01 → 02 → 05 → 12 → 11 → 08 → 16
+- **DevOps / Release engineer**: 02 → 16 → 13
+- **Architect / CQRS lead**: 03 → 06 → 09 → 10 → 17
 
 ---
 
@@ -60,30 +58,30 @@ It supports three message kinds:
 
 | Project | Type | Description |
 |---------|------|-------------|
-| `src/MediatR` | Library (NuGet) | Core mediator, pipeline, DI extensions, **licensing** |
+| `src/MediatR` | Library (NuGet) | Core mediator, pipeline, DI extensions |
 | `src/MediatR.Contracts` | Library (NuGet) | Minimal contracts: `IRequest`, `INotification`, `IStreamRequest`, `Unit` |
 | `samples/MediatR.Examples` | Sample | Ping/Pong, notifications, processors, exceptions |
 | `samples/MediatR.Examples.AspNetCore` | Sample | ASP.NET Core DI integration |
 | `samples/MediatR.Examples.PublishStrategies` | Sample | 6 notification publishing strategies |
 | `samples/MediatR.Examples.*` | Samples | Integration with Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
-| `test/MediatR.Tests` | xUnit | Core functionality tests |
-| `test/MediatR.DependencyInjectionTests` | xUnit | DI/registration tests |
+| `test/MediatR.Tests` | xUnit | Core functionality + DI registration tests |
 | `test/MediatR.Benchmarks` | BenchmarkDotNet | Performance benchmarks |
 
 ---
 
-## Key differences vs. upstream MediatR
+## Licensing and upstream relationship
 
-| Feature | jbogard/MediatR | AN.MediatR (LuckyPennySoftware) |
-|---------|-----------------|---------------------------------|
-| Core mediator API | Same | Same |
-| Pipeline behaviors, processors, stream requests | Same | Same |
-| License (source code) | Apache-2.0 (≤ v12) / Commercial (v13+) | RPL 1.5 or commercial |
-| License key required at runtime | No | Yes (warning logged if missing) |
-| JWT-based license validation | No | Yes (`LicenseAccessor`, `LicenseValidator`) |
-| Perpetual license support | No | Yes (build date check) |
-| `Mediator.LicenseKey` / `cfg.LicenseKey` | No | Yes |
-| ILogger integration for licensing | No | Yes (`LuckyPennySoftware.MediatR.License` category) |
+| Aspect | AN.MediatR (this fork) | jbogard/MediatR v12.5 (source) | jbogard/MediatR v13+ |
+|--------|------------------------|--------------------------------|----------------------|
+| License | **Apache-2.0** | Apache-2.0 | Dual RPL-1.5 / commercial, JWT licensing required |
+| Runtime license check | ❌ None | ❌ None | ✅ JWT validation, warnings if missing |
+| Maintainer | Aves Nobles (AN) | Jimmy Bogard (upstream state at v12.5) | Lucky Penny Software |
+| Future direction | Independent open-source fork | N/A (upstream abandoned at this version) | Commercial product |
+
+**Why we forked**: we wanted a mediator library with identical semantics to the MediatR most .NET developers know, but:
+- staying fully open source (Apache-2.0);
+- without a runtime licensing subsystem;
+- free to evolve in the direction our projects need.
 
 ---
 

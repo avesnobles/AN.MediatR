@@ -1,6 +1,6 @@
 # Estructura del Proyecto
 
-Este documento enumera cada proyecto de la solución `MediatR.slnx`, su propósito, dependencias y relación con el resto del código. Complementa [Arquitectura](01%20-%20Arquitectura.md), que describe el stack de alto nivel.
+Este documento enumera cada proyecto de la solución `MediatR.sln`, su propósito, dependencias y relación con el resto del código. Complementa [Arquitectura](01%20-%20Arquitectura.md).
 
 ---
 
@@ -12,7 +12,7 @@ AN.MediatR se organiza en tres carpetas principales dentro del repositorio:
 |---------|-----------|
 | `src/` | Los dos paquetes NuGet: `MediatR` y `MediatR.Contracts` |
 | `samples/` | Diez proyectos de ejemplo con patrones de integración |
-| `test/` | Tres proyectos de test (unitarios, DI, benchmarks) |
+| `test/` | Dos proyectos de test (unidad/DI, benchmarks) |
 
 ---
 
@@ -22,23 +22,19 @@ AN.MediatR se organiza en tres carpetas principales dentro del repositorio:
 
 La librería principal. Produce el paquete NuGet `MediatR`.
 
-- **Frameworks destino**: `netstandard2.0`, `net8.0`, `net9.0`, `net10.0` y `net462` (solo Windows).
+- **Frameworks destino**: `netstandard2.0;net6.0`.
 - **Nullable**: activado.
 - **Strong-named**: sí, mediante `..\..\MediatR.snk`.
 - **Documentación XML**: generada (`GenerateDocumentationFile = true`).
-- **Metadatos del paquete**: icono, README, archivo de licencia (`LICENSE.md`), `PackageRequireLicenseAcceptance = true`, URL del proyecto `https://mediatr.io`.
-- **Versionado**: `MinVer` con prefijo de tag `v` (p. ej. `v13.2.0`).
-- **Target MSBuild**: `EmbedBuildDate` se ejecuta antes de `CoreCompile`. Ejecuta `git log -1 --format=%cI` y escribe la fecha ISO-8601 del build en un atributo `[assembly: AssemblyMetadata("BuildDateUtc", "...")]` usado por la lógica de licencia perpetua (`BuildInfo.cs`).
+- **Metadatos del paquete**: icono, README, licencia Apache-2.0, URL del proyecto.
+- **Versionado**: `MinVer` con prefijo de tag `v` (p. ej. `v12.5.0`).
 - **Dependencias**:
-  - `IsExternalInit` (solo dev) — permite propiedades `init` en `netstandard2.0` / `net462`.
+  - `IsExternalInit` (solo dev) — permite propiedades `init` en `netstandard2.0`.
   - `MediatR.Contracts` (versión `[2.0.1, 3.0.0)`).
-  - `Microsoft.Bcl.AsyncInterfaces` (solo en `netstandard2.0`).
-  - `Microsoft.Extensions.DependencyInjection.Abstractions` v10+.
-  - `Microsoft.Extensions.Logging.Abstractions` v10+.
-  - `Microsoft.IdentityModel.JsonWebTokens` v8.14+ (requerida por el subsistema de licenciamiento).
+  - `Microsoft.Bcl.AsyncInterfaces` v8.0.0 (solo en `netstandard2.0`) — aporta `IAsyncEnumerable<T>`.
+  - `Microsoft.Extensions.DependencyInjection.Abstractions` v8.0.0.
   - `Microsoft.SourceLink.GitHub` 8.0.0 (solo dev).
   - `MinVer` 6.0.0 (solo dev).
-- **`InternalsVisibleTo`**: expone tipos internos a `MediatR.Tests` (hash de clave pública firmada).
 
 Distribución de carpetas:
 
@@ -49,17 +45,10 @@ src/MediatR/
 ├── Internal/
 │   ├── HandlersOrderer.cs
 │   └── ObjectDetails.cs
-├── Licensing/
-│   ├── BuildInfo.cs
-│   ├── Edition.cs
-│   ├── License.cs
-│   ├── LicenseAccessor.cs
-│   ├── LicenseValidator.cs
-│   └── ProductType.cs
 ├── MicrosoftExtensionsDI/
-│   ├── MediatRServiceCollectionExtensions.cs
 │   ├── MediatrServiceConfiguration.cs
-│   └── RequestExceptionActionProcessorStrategy.cs
+│   ├── RequestExceptionActionProcessorStrategy.cs
+│   └── ServiceCollectionExtensions.cs
 ├── NotificationPublishers/
 │   ├── ForeachAwaitPublisher.cs
 │   └── TaskWhenAllPublisher.cs
@@ -91,16 +80,17 @@ src/MediatR/
 ├── Mediator.cs
 ├── MediatR.csproj
 ├── NotificationHandlerExecutor.cs
-├── TypeForwardings.cs
-└── license.txt
+└── TypeForwardings.cs
 ```
+
+> Nota: a diferencia del upstream v13+, este árbol **no tiene carpeta `Licensing/`**, ni `license.txt` embebido, ni `BuildInfo.cs`, ni target MSBuild `EmbedBuildDate`. No hay subsistema de licenciamiento en runtime.
 
 ### `src/MediatR.Contracts/MediatR.Contracts.csproj`
 
-Un paquete mínimo y sin dependencias con solo las interfaces de contrato. Produce el paquete NuGet `MediatR.Contracts`.
+Paquete mínimo sin dependencias con solo las interfaces de contrato.
 
 - **Framework destino**: solo `netstandard2.0`.
-- **Licencia**: `Apache-2.0` (`PackageLicenseExpression`).
+- **Licencia**: `Apache-2.0`.
 - **Versión**: fijada en `2.0.1` (no gestionada por `MinVer`).
 - **Dependencias**: ninguna más allá de SourceLink (solo dev).
 
@@ -108,41 +98,35 @@ Contenidos:
 
 ```
 src/MediatR.Contracts/
-├── INotification.cs           # interfaz marcador para notificaciones
+├── INotification.cs
 ├── IRequest.cs                # IBaseRequest, IRequest, IRequest<TResponse>
-├── IStreamRequest.cs          # IStreamRequest<TResponse>
-├── Unit.cs                    # Tipo de valor Unit (sustituto de void)
+├── IStreamRequest.cs
+├── Unit.cs
 └── MediatR.Contracts.csproj
 ```
 
-Ver [Paquete Contracts](14%20-%20Paquete_Contracts.md) para la justificación y uso.
+Ver [Paquete Contracts](13%20-%20Paquete_Contracts.md).
 
 ---
 
 ## `samples/` — Aplicaciones de ejemplo
 
-Todos los proyectos de ejemplo son aplicaciones de consola (o un host mínimo de ASP.NET Core) y referencian directamente `src/MediatR/MediatR.csproj`.
+Todas referencian directamente `src/MediatR/MediatR.csproj`.
 
 | Proyecto | Propósito |
 |----------|-----------|
-| `MediatR.Examples` | Base: define `Ping`/`Pong`, `Pinged`, `Jing`, `Sing`/`Song`, procesadores pre/post, handlers de excepciones. Contiene `Runner.cs` usado por el resto de ejemplos. |
-| `MediatR.Examples.AspNetCore` | Registra MediatR vía `Microsoft.Extensions.DependencyInjection`, ejecuta el `Runner` en un host mínimo. |
-| `MediatR.Examples.Autofac` | Integración con contenedor Autofac. |
-| `MediatR.Examples.DryIoc` | Integración con contenedor DryIoc. |
-| `MediatR.Examples.Lamar` | Integración con contenedor Lamar. |
-| `MediatR.Examples.LightInject` | Integración con contenedor LightInject. |
-| `MediatR.Examples.PublishStrategies` | Define seis estrategias de publicación de notificaciones (`Async`, `ParallelNoWait`, `ParallelWhenAll`, `ParallelWhenAny`, `SyncContinueOnException`, `SyncStopOnException`) mediante una subclase `CustomMediator`. |
+| `MediatR.Examples` | Base: `Ping`/`Pong`, `Pinged`, `Jing`, `Sing`/`Song`, procesadores, handlers de excepciones. Contiene `Runner.cs`. |
+| `MediatR.Examples.AspNetCore` | Registra MediatR vía `Microsoft.Extensions.DependencyInjection`. |
+| `MediatR.Examples.Autofac` | Integración con Autofac. |
+| `MediatR.Examples.DryIoc` | Integración con DryIoc. |
+| `MediatR.Examples.Lamar` | Integración con Lamar. |
+| `MediatR.Examples.LightInject` | Integración con LightInject. |
+| `MediatR.Examples.PublishStrategies` | 6 estrategias de publicación (`Async`, `ParallelNoWait`, `ParallelWhenAll`, `ParallelWhenAny`, `SyncContinueOnException`, `SyncStopOnException`) vía `CustomMediator`. |
 | `MediatR.Examples.SimpleInjector` | Integración con SimpleInjector. |
 | `MediatR.Examples.Stashbox` | Integración con Stashbox. |
 | `MediatR.Examples.Windsor` | Integración con Castle.Windsor. |
 
-El patrón típico en cada ejemplo:
-
-1. Construir el contenedor DI y registrar MediatR + handlers.
-2. Resolver `IMediator`.
-3. Ceder el control al método compartido `Runner.Run(...)` de `MediatR.Examples`, que envía `Ping`, publica `Pinged`, envía `Jing` (espera que falle), opcionalmente hace streaming de `Sing`, y ejercita los handlers / actions de excepciones.
-
-Ver [Integración de Contenedores DI](16%20-%20Integracion_Contenedores_DI.md) para detalles específicos de cada contenedor.
+Ver [Integración de Contenedores DI](15%20-%20Integracion_Contenedores_DI.md).
 
 ---
 
@@ -150,34 +134,22 @@ Ver [Integración de Contenedores DI](16%20-%20Integracion_Contenedores_DI.md) p
 
 ### `test/MediatR.Tests`
 
-Suite xUnit principal. Cubre:
+Suite xUnit completa. Cubre:
 
 - Request/response (incluyendo requests void que devuelven `Unit`).
-- Publicación de notificaciones (secuencial, paralelo, publicadores custom).
+- Publicación de notificaciones (secuencial, paralelo, publishers custom).
 - Comportamientos del pipeline (orden de registro, encadenado de `RequestHandlerDelegate`).
 - Procesadores pre y post.
 - Handlers y actions de excepciones (con aserciones de prioridad vía `HandlersOrderer`).
 - Stream handlers y comportamientos de stream.
-- Tests de licenciamiento (claves válidas/inválidas/expiradas/perpetuas, logs de warning).
-- Semántica de comparación de `ObjectDetails`.
+- Semántica de `ObjectDetails`.
+- Registro `AddMediatR(...)`, escaneo DI, registro de genéricos abiertos, límites de registro — en la subcarpeta `MicrosoftExtensionsDI/`.
 
-Los tests pueden ver tipos `internal` gracias al atributo `InternalsVisibleTo` en `MediatR.csproj`.
-
-### `test/MediatR.DependencyInjectionTests`
-
-Tests que ejercitan el comportamiento de `AddMediatR(...)` y `ServiceRegistrar`:
-
-- Escaneo del ensamblado correcto.
-- Overrides transient vs. singleton.
-- Registro de handlers cerrados y de genéricos abiertos.
-- Límites de escaneo (`MaxGenericTypeParameters`, `MaxTypesClosing`, `MaxGenericTypeRegistrations`, `RegistrationTimeout`).
-- Filtros custom vía `TypeEvaluator`.
-- Registro automático de procesadores (`AutoRegisterRequestProcessors`).
-- Casos extremos de visibilidad (handlers internos/privados).
+(En v12.5 no hay proyecto separado `MediatR.DependencyInjectionTests` — los tests de DI viven dentro de `MediatR.Tests/MicrosoftExtensionsDI/`.)
 
 ### `test/MediatR.Benchmarks`
 
-Microbenchmarks con `BenchmarkDotNet` para `Send`, `Publish`, `CreateStream` y overhead del pipeline. Útiles para detectar regresiones durante refactorizaciones.
+Microbenchmarks con `BenchmarkDotNet` para `Send`, `Publish`, `CreateStream` y overhead del pipeline.
 
 ---
 
@@ -192,23 +164,23 @@ dotnet test  -c Release --no-build -l trx --verbosity=normal
 dotnet pack  .\src\MediatR\MediatR.csproj -c Release -o .\artifacts --no-build
 ```
 
-Clean + build + test + pack del paquete principal `MediatR`. Los artefactos van a `./artifacts`.
+Clean + build + test + pack. Salida en `./artifacts`.
 
 ### `BuildContracts.ps1`
 
-Script dedicado que solo hace build + pack de `MediatR.Contracts` con `ContinuousIntegrationBuild=true` para builds deterministas.
+Build + pack de `MediatR.Contracts` con `ContinuousIntegrationBuild=true`.
 
 ### `Push.ps1`
 
-Sube cada `.nupkg` en `./artifacts` al feed NuGet especificado por las variables de entorno `NUGET_URL` y `NUGET_API_KEY`, usando `--skip-duplicate`.
+Sube cada `.nupkg` de `./artifacts` al feed indicado por `NUGET_URL` y `NUGET_API_KEY`, con `--skip-duplicate`.
 
-Ver [Build, Tests y Publicación](17%20-%20Build_Tests_Publicacion.md) para detalles.
+Ver [Build, Tests y Publicación](16%20-%20Build_Tests_Publicacion.md).
 
 ---
 
 ## Archivo de solución
 
-`MediatR.slnx` usa el nuevo formato XML de solución (alternativa al `.sln` de texto legacy). Cada proyecto está referenciado ahí. Algunas versiones de Visual Studio / Rider necesitan una extensión o SDK reciente para abrir `.slnx`.
+`MediatR.sln` usa el formato de texto clásico `.sln`. Todos los proyectos se referencian ahí.
 
 ---
 
@@ -216,9 +188,9 @@ Ver [Build, Tests y Publicación](17%20-%20Build_Tests_Publicacion.md) para deta
 
 | Archivo | Propósito |
 |---------|-----------|
-| `Directory.Build.props` | Propiedades MSBuild compartidas (versión del lenguaje, warnings como errores, códigos suprimidos). |
-| `MediatR.snk` | Clave de firma strong-name para `MediatR` y `MediatR.Contracts`. |
+| `Directory.Build.props` | Props MSBuild compartidas (lenguaje 10, warnings como errores). |
+| `MediatR.snk` | Clave de firma strong-name. |
 | `NuGet.Config` | Configuración del feed NuGet. |
-| `LICENSE.md` | Aviso de licencia dual (RPL 1.5 / comercial). |
-| `README.md` | Quickstart, también empaquetado como README NuGet de `MediatR`. |
+| `LICENSE` | Texto completo de la licencia Apache-2.0. |
+| `README.md` | Quickstart, empaquetado también como README del NuGet. |
 | `assets/logo/gradient_128x128.png` | Icono del paquete. |

@@ -355,13 +355,7 @@ Source: [src/MediatR/TypeForwardings.cs](../../src/MediatR/TypeForwardings.cs).
 
 Physically these types live in `MediatR.Contracts`. The `MediatR` assembly forwards their definitions so that existing code referencing `MediatR.IRequest`, `MediatR.INotification`, etc. keeps working without an explicit reference to `MediatR.Contracts` — and without duplicating type definitions in both assemblies (which would be a CLR identity disaster).
 
-See [Contracts Package](14%20-%20Contracts_Package.md) for the rationale.
-
----
-
-## The `license.txt` file
-
-`src/MediatR/license.txt` is an embedded resource (not a runtime mechanism). It is referenced by the `GenerateDocumentationFile` / packaging process to ship the license text inside the NuGet package.
+See [Contracts Package](13%20-%20Contracts_Package.md) for the rationale.
 
 ---
 

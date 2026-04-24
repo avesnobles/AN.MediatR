@@ -20,8 +20,6 @@ public class Mediator : IMediator
     private static readonly ConcurrentDictionary<Type, NotificationHandlerWrapper> _notificationHandlers = new();
     private static readonly ConcurrentDictionary<Type, StreamRequestHandlerBase> _streamRequestHandlers = new();
 
-    public static string? LicenseKey { get; set; }
-
     public Mediator(IServiceProvider serviceProvider)
         : this(serviceProvider, new ForeachAwaitPublisher()) { }
 
@@ -29,20 +27,16 @@ public class Mediator : IMediator
     {
         _serviceProvider = serviceProvider;
         _publisher = publisher;
-        _serviceProvider.CheckLicense();
     }
 }
 ```
 
-Three things to note:
+Two things to note:
 
 1. **Two private fields**: an `IServiceProvider` (for resolving handlers and behaviors on every call) and an `INotificationPublisher` (the strategy for multi-handler dispatch).
 2. **Three static dictionaries**: these are the **global wrapper caches**, shared across every `Mediator` instance in the process. The key is the **runtime** type of a message; the value is a cached wrapper that knows how to invoke handlers for that type.
-3. **License check on construction**: every new `Mediator` instance calls `_serviceProvider.CheckLicense()`, which lazily validates the license **once per application** (guarded by an internal static flag). See [Licensing](13%20-%20Licensing.md).
 
-The two constructors form a small **chain**: if you don't pass an `INotificationPublisher`, you get `ForeachAwaitPublisher` (sequential handler execution).
-
-`LicenseKey` is a `public static` property — you can set it at runtime from anywhere (`Mediator.LicenseKey = "..."`), useful for client-side scenarios such as Blazor WASM that don't go through DI-based configuration.
+The two constructors form a small **chain**: if you don't pass an `INotificationPublisher`, you get `ForeachAwaitPublisher` (sequential handler execution). The constructor does no other work — no license check, no network call, no logging.
 
 ---
 

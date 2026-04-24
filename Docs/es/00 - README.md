@@ -1,10 +1,10 @@
 # Documentación de AN.MediatR
 
-Bienvenido a la documentación completa de **AN.MediatR**, un fork de la conocida librería [MediatR](https://github.com/jbogard/MediatR) creada originalmente por **Jimmy Bogard** y actualmente mantenida como producto comercial por **Lucky Penny Software** (la organización detrás del ecosistema **Aves Nobles** / **AN**).
+Bienvenido a la documentación completa de **AN.MediatR**, un fork libre y de código abierto de la conocida librería [MediatR](https://github.com/jbogard/MediatR) creada originalmente por **Jimmy Bogard**.
 
-AN.MediatR es una **implementación simple y sin pretensiones del patrón Mediator para .NET**. Proporciona mensajería en proceso con cero dependencias externas más allá de `Microsoft.Extensions.DependencyInjection.Abstractions` y `Microsoft.Extensions.Logging.Abstractions`, soportando petición/respuesta, comandos, consultas, notificaciones, eventos y streaming — tanto síncronos como asíncronos — con dispatching inteligente gracias a la varianza genérica de C#.
+Este fork parte de **MediatR v12.5** — la **última versión publicada bajo Apache-2.0** antes de que el proyecto upstream pasara a un modelo de licenciamiento comercial — y es mantenido por el equipo de **Aves Nobles (AN)**. A partir de v12.5, AN.MediatR diverge del upstream `jbogard/MediatR` y evoluciona como una librería open-source independiente.
 
-Este fork añade un **sistema de licenciamiento empresarial** (basado en JWT) sobre el mediator open-source original, que es la diferencia funcional clave respecto al upstream `jbogard/MediatR`.
+AN.MediatR es una **implementación simple y sin pretensiones del patrón Mediator para .NET**. Proporciona mensajería en proceso con cero dependencias externas más allá de `Microsoft.Extensions.DependencyInjection.Abstractions`, soportando petición/respuesta, comandos, consultas, notificaciones, eventos y streaming — tanto síncronos como asíncronos — con dispatching inteligente gracias a la varianza genérica de C#.
 
 ---
 
@@ -24,13 +24,12 @@ Este fork añade un **sistema de licenciamiento empresarial** (basado en JWT) so
 | [Streaming](10%20-%20Streaming.md) | `IStreamRequest`, `IStreamRequestHandler`, comportamientos para streams |
 | [Inyección de Dependencias](11%20-%20Inyeccion_de_Dependencias.md) | `AddMediatR`, `MediatRServiceConfiguration`, `ServiceRegistrar`, escaneo, límites de genéricos |
 | [Wrappers e Internos](12%20-%20Wrappers_e_Internos.md) | Wrappers de type-erasure, `HandlersOrderer`, `ObjectDetails` |
-| [Licenciamiento](13%20-%20Licenciamiento.md) | Sistema de licencias de Lucky Penny — JWT, ediciones, licencias perpetuas |
-| [Paquete Contracts](14%20-%20Paquete_Contracts.md) | Paquete NuGet `MediatR.Contracts` y `TypeForwardings` |
-| [Ejemplos de Uso](15%20-%20Ejemplos_de_Uso.md) | Escenarios típicos con código: Ping/Pong, notificaciones, streams, excepciones |
-| [Integración de Contenedores DI](16%20-%20Integracion_Contenedores_DI.md) | ASP.NET Core, Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
-| [Build, Tests y Publicación](17%20-%20Build_Tests_Publicacion.md) | `Build.ps1`, `BuildContracts.ps1`, `Push.ps1`, tests, benchmarks, firma |
-| [Buenas Prácticas y FAQ](18%20-%20Buenas_Practicas_y_FAQ.md) | Patrones, anti-patrones, preguntas habituales |
-| [Glosario](19%20-%20Glosario.md) | Glosario de términos usados en toda la documentación |
+| [Paquete Contracts](13%20-%20Paquete_Contracts.md) | Paquete NuGet `MediatR.Contracts` y `TypeForwardings` |
+| [Ejemplos de Uso](14%20-%20Ejemplos_de_Uso.md) | Escenarios típicos con código: Ping/Pong, notificaciones, streams, excepciones |
+| [Integración de Contenedores DI](15%20-%20Integracion_Contenedores_DI.md) | ASP.NET Core, Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
+| [Build, Tests y Publicación](16%20-%20Build_Tests_Publicacion.md) | `Build.ps1`, `BuildContracts.ps1`, `Push.ps1`, tests, benchmarks |
+| [Buenas Prácticas y FAQ](17%20-%20Buenas_Practicas_y_FAQ.md) | Patrones, anti-patrones, preguntas habituales |
+| [Glosario](18%20-%20Glosario.md) | Glosario de términos usados en toda la documentación |
 
 ---
 
@@ -38,11 +37,10 @@ Este fork añade un **sistema de licenciamiento empresarial** (basado en JWT) so
 
 Según tu rol, prioriza distintos documentos:
 
-- **Nuevo desarrollador de aplicación** (usando MediatR en su app): 03 → 04 → 15 → 06 → 07 → 09 → 11 → 18
-- **Contribuidor / Mantenedor de la librería**: 01 → 02 → 05 → 12 → 11 → 08 → 13 → 17
-- **DevOps / Ingeniero de release**: 02 → 17 → 13 → 14
-- **Arquitecto / Responsable de CQRS**: 03 → 06 → 09 → 10 → 18
-- **Administrador de licencias / Compras**: 13 → 14 → 18
+- **Nuevo desarrollador de aplicación** (usando MediatR en su app): 03 → 04 → 14 → 06 → 07 → 09 → 11 → 17
+- **Contribuidor / Mantenedor de la librería**: 01 → 02 → 05 → 12 → 11 → 08 → 16
+- **DevOps / Ingeniero de release**: 02 → 16 → 13
+- **Arquitecto / Responsable de CQRS**: 03 → 06 → 09 → 10 → 17
 
 ---
 
@@ -60,30 +58,30 @@ Soporta tres tipos de mensajes:
 
 | Proyecto | Tipo | Descripción |
 |----------|------|-------------|
-| `src/MediatR` | Librería (NuGet) | Mediator principal, pipeline, extensiones DI, **licenciamiento** |
+| `src/MediatR` | Librería (NuGet) | Mediator principal, pipeline, extensiones DI |
 | `src/MediatR.Contracts` | Librería (NuGet) | Contratos mínimos: `IRequest`, `INotification`, `IStreamRequest`, `Unit` |
 | `samples/MediatR.Examples` | Ejemplo | Ping/Pong, notificaciones, procesadores, excepciones |
 | `samples/MediatR.Examples.AspNetCore` | Ejemplo | Integración con DI de ASP.NET Core |
 | `samples/MediatR.Examples.PublishStrategies` | Ejemplo | 6 estrategias de publicación de notificaciones |
 | `samples/MediatR.Examples.*` | Ejemplos | Integración con Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
-| `test/MediatR.Tests` | xUnit | Tests del núcleo |
-| `test/MediatR.DependencyInjectionTests` | xUnit | Tests de registro en DI |
+| `test/MediatR.Tests` | xUnit | Tests del núcleo + registro en DI |
 | `test/MediatR.Benchmarks` | BenchmarkDotNet | Benchmarks de rendimiento |
 
 ---
 
-## Diferencias clave frente al MediatR upstream
+## Licenciamiento y relación con el upstream
 
-| Característica | jbogard/MediatR | AN.MediatR (LuckyPennySoftware) |
-|----------------|-----------------|---------------------------------|
-| API del mediator | Igual | Igual |
-| Pipeline, procesadores, stream requests | Igual | Igual |
-| Licencia (código fuente) | Apache-2.0 (≤ v12) / Comercial (v13+) | RPL 1.5 o comercial |
-| Clave de licencia en runtime | No | Sí (se registra warning si falta) |
-| Validación JWT de licencia | No | Sí (`LicenseAccessor`, `LicenseValidator`) |
-| Licencia perpetua | No | Sí (comprobación contra fecha de build) |
-| `Mediator.LicenseKey` / `cfg.LicenseKey` | No | Sí |
-| Integración con ILogger para licenciamiento | No | Sí (categoría `LuckyPennySoftware.MediatR.License`) |
+| Aspecto | AN.MediatR (este fork) | jbogard/MediatR v12.5 (origen) | jbogard/MediatR v13+ |
+|---------|------------------------|--------------------------------|----------------------|
+| Licencia | **Apache-2.0** | Apache-2.0 | Dual RPL-1.5 / comercial, con licenciamiento JWT |
+| Comprobación de licencia en runtime | ❌ Ninguna | ❌ Ninguna | ✅ Validación JWT, warnings si falta |
+| Mantenedor | Aves Nobles (AN) | Jimmy Bogard (estado upstream en v12.5) | Lucky Penny Software |
+| Dirección futura | Fork open-source independiente | N/A (abandonado en esa versión) | Producto comercial |
+
+**Por qué hemos forkeado**: queríamos una librería mediator con la misma semántica que la MediatR que conocen la mayoría de desarrolladores .NET, pero:
+- manteniéndola totalmente open-source (Apache-2.0);
+- sin sistema de licenciamiento en runtime;
+- libre para evolucionar según las necesidades de nuestros proyectos.
 
 ---
 

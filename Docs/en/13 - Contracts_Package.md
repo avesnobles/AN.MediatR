@@ -32,7 +32,7 @@ And that is **the entire package**. Five source files. No implementation — jus
 ```
 
 - **Only netstandard2.0**. Since the package has no logic, one target framework is enough and keeps it reachable from every modern and legacy .NET runtime.
-- **Apache-2.0 license**. Deliberately permissive — because the main `MediatR` package is RPL-1.5 or commercial, and you need request/notification types to be usable in any project regardless of licensing constraints.
+- **Apache-2.0 license**. Both packages are Apache-2.0 in AN.MediatR; historically the contracts package was split so that request/notification types could be placed in contract-only libraries without any licensing friction. In v13+ upstream the main package switched to RPL-1.5 / commercial, making the separation critical — AN.MediatR keeps the same split for consistency and so that contract-only libraries stay ultra-lean (no DI / no MinVer / tiny dependency graph).
 - **Fixed version `2.0.1`** — not driven by the main `MinVer` versioning. The contracts are expected to be stable.
 - **Namespace `MediatR`** — same namespace as the main library, so consumers only ever write `using MediatR;` regardless of which package defines a given type.
 
@@ -40,11 +40,9 @@ And that is **the entire package**. Five source files. No implementation — jus
 
 ## Why a separate package
 
-### 1. Separate licensing
+### 1. Slimmer dependency graph for contract-only projects
 
-The main `MediatR` library is distributed under RPL 1.5 (or a commercial license — see [Licensing](13%20-%20Licensing.md) and `LICENSE.md`). The contracts package is Apache-2.0, a much more permissive license.
-
-This dichotomy lets you define your request and notification types in **any** downstream library — even libraries that cannot accept an RPL dependency — without pulling in the main `MediatR` binary.
+`MediatR.Contracts` has **zero** runtime dependencies; `MediatR` depends on `MediatR.Contracts` plus `Microsoft.Extensions.DependencyInjection.Abstractions`. Libraries that only need to declare `IRequest` / `INotification` types (API contracts, gRPC contracts, Blazor WASM clients) can reference the smaller package and ship fewer transitive assemblies.
 
 ### 2. API-contract projects
 

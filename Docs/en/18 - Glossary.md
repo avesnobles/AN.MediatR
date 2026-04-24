@@ -16,9 +16,6 @@ An `IPipelineBehavior<TRequest, TResponse>` implementation. Wraps every request 
 **Behavior (stream pipeline behavior)**  
 An `IStreamPipelineBehavior<TRequest, TResponse>` implementation. Same idea as a regular behavior but for `IStreamRequest` messages — yields items as they pass through.
 
-**Build date**  
-The ISO 8601 date embedded into the `MediatR` assembly by the `EmbedBuildDate` MSBuild target. Read by `BuildInfo.cs`. Used to evaluate the "perpetual" license rule — a build produced before the expiration date of a perpetual license stays licensed forever.
-
 **Cache (wrapper cache)**  
 The three static `ConcurrentDictionary<Type, ...>` fields on the `Mediator` class (`_requestHandlers`, `_notificationHandlers`, `_streamRequestHandlers`) that cache generic wrapper instances keyed by the runtime type of the message. Shared process-wide.
 
@@ -36,9 +33,6 @@ The act of sending a message through the mediator — `Send`, `Publish`, `Create
 
 **Dynamic dispatch**  
 The object-typed overloads: `Send(object)`, `Publish(object)`, `CreateStream(object)`. The runtime type is introspected for the right marker interface. Useful for generic hosts, API gateways, test harnesses.
-
-**Edition**  
-One of `Community`, `Standard`, `Professional`, `Enterprise` (see `Licensing/Edition.cs`). Extracted from the `edition` JWT claim. Currently logged but not enforced per-edition.
 
 **ForeachAwaitPublisher**  
 Default `INotificationPublisher`. Runs handlers sequentially, awaits each. Fail-fast semantics.
@@ -79,21 +73,6 @@ Interface for the request/stream side of the mediator (`Send`, `Send<TResponse>`
 **IStreamRequest&lt;TResponse&gt;**  
 Marker for a streaming request that returns `IAsyncEnumerable<TResponse>`.
 
-**JWT (JSON Web Token)**  
-Compact, signed token format used for license keys. AN.MediatR validates licenses with `Microsoft.IdentityModel.JsonWebTokens` and a hardcoded RSA public key.
-
-**License**  
-An internal value object (`MediatR.Licensing.License`) representing the parsed claims from a validated JWT license key. Produced by `LicenseAccessor.Current`.
-
-**LicenseAccessor**  
-Internal singleton that reads the license key (from configuration or `Mediator.LicenseKey`), validates the JWT signature, and caches the resulting `License` instance.
-
-**LicenseValidator**  
-Internal singleton that applies business rules (expiration, perpetual, product type) to a `License` and logs the result.
-
-**Lucky Penny Software**  
-The organization behind AN.MediatR, AutoMapper (commercial fork), and related products. See https://luckypennysoftware.com.
-
 **Marker interface**  
 An interface with no members, used purely for type constraints and polymorphic dispatch (e.g. `IRequest`, `INotification`).
 
@@ -104,7 +83,7 @@ The concrete class implementing `IMediator`. See [Mediator Implementation](05%20
 See **Contracts**.
 
 **MediatRServiceConfiguration**  
-Fluent configuration object passed to `AddMediatR(cfg => ...)`. Collects assemblies, behaviors, processors, license key, etc.
+Fluent configuration object passed to `AddMediatR(cfg => ...)`. Collects assemblies, behaviors, processors, etc.
 
 **Middleware (pipeline)**  
 Loose synonym for **pipeline behavior**. Reflects the similarity with ASP.NET Core middleware.
@@ -127,9 +106,6 @@ Value object (`MediatR.Entities.OpenBehavior`) used by `cfg.AddOpenBehaviors(IEn
 **Open generic**  
 A generic type definition (`LoggingBehavior<,>`) as opposed to a closed generic (`LoggingBehavior<CreateOrder, int>`).
 
-**Perpetual license**  
-A license mode where expiration lets you keep running any build **produced before** the expiration date. Implemented via the embedded build date attribute.
-
 **Pipeline**  
 The composed chain of `IPipelineBehavior<TRequest, TResponse>` wrappers + the final handler. Built by `RequestHandlerWrapperImpl` with `Reverse().Aggregate(...)`.
 
@@ -138,9 +114,6 @@ Implementation of `IRequestPostProcessor<TRequest, TResponse>`. Runs **after** t
 
 **Pre-processor**  
 Implementation of `IRequestPreProcessor<TRequest>`. Runs **before** the handler, receives request, returns `Task`. Cannot short-circuit.
-
-**ProductType**  
-One of `AutoMapper`, `MediatR`, `Bundle` (`Licensing/ProductType.cs`). Extracted from the `type` JWT claim. `LicenseValidator` requires `MediatR` or `Bundle`.
 
 **Publisher**  
 See **INotificationPublisher**.
@@ -168,9 +141,6 @@ Enum controlling whether actions run **only for unhandled exceptions** (default)
 
 **RequestHandlerWrapper**  
 Abstract type-erasure wrapper over `IRequestHandler<,>`. See [Wrappers and Internals](12%20-%20Wrappers_and_Internals.md).
-
-**RPL 1.5**  
-*Reciprocal Public License 1.5* — the open-source license under which AN.MediatR is distributed when used without a commercial license. See `LICENSE.md`.
 
 **ServiceRegistrar**  
 Static class (`MediatR.Registration.ServiceRegistrar`) that performs the assembly scanning and registers services into an `IServiceCollection`. The heart of `AddMediatR`.

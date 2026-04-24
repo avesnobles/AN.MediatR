@@ -397,7 +397,6 @@ Objeto de configuración fluida pasado al delegate `AddMediatR(cfg => ...)`. Pro
 | `MaxGenericTypeRegistrations` | `125000` | Combinaciones totales máximas |
 | `RegistrationTimeout` | `15000` ms | Timeout del proceso de registro |
 | `RegisterGenericHandlers` | `false` | Si se deben registrar handlers con parámetros genéricos |
-| `LicenseKey` | `null` | Clave de licencia |
 
 Métodos de registro (encadenables — cada uno retorna `this`):
 
@@ -422,9 +421,9 @@ public enum RequestExceptionActionProcessorStrategy
 
 Controla el orden de registro de `RequestExceptionActionProcessorBehavior<,>` frente a `RequestExceptionProcessorBehavior<,>` — ver [Gestión de Excepciones](08%20-%20Gestion_de_Excepciones.md).
 
-### `MediatRServiceCollectionExtensions`
+### `ServiceCollectionExtensions`
 
-Fuente: [src/MediatR/MicrosoftExtensionsDI/MediatRServiceCollectionExtensions.cs](../../src/MediatR/MicrosoftExtensionsDI/MediatRServiceCollectionExtensions.cs).
+Fuente: [src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs](../../src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs).
 
 - `services.AddMediatR(Action<MediatRServiceConfiguration>)` — punto de entrada idiomático.
 - `services.AddMediatR(MediatRServiceConfiguration)` — sobrecarga aceptando una configuración ya preparada.
@@ -440,7 +439,6 @@ Estos tipos son `internal`, pero entenderlos ayuda al depurar o extender. Ver [W
 - `MediatR.Wrappers.StreamRequestHandlerBase`, `StreamRequestHandlerWrapper<TResponse>`, `StreamRequestHandlerWrapperImpl<TRequest, TResponse>`.
 - `MediatR.Internal.HandlersOrderer` — prioriza handlers de excepciones por proximidad de ensamblado/namespace.
 - `MediatR.Internal.ObjectDetails` — el `IComparer<ObjectDetails>` usado por `HandlersOrderer`.
-- `MediatR.Licensing.*` — todos internos; ver [Licenciamiento](13%20-%20Licenciamiento.md).
 
 ---
 

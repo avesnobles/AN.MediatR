@@ -1,6 +1,6 @@
 # Project Structure
 
-This document enumerates every project in the `MediatR.slnx` solution, its purpose, dependencies, and relation to the rest of the codebase. It complements [Architecture](01%20-%20Architecture.md), which describes the high-level layering.
+This document enumerates every project in the `MediatR.sln` solution, its purpose, dependencies, and relation to the rest of the codebase. It complements [Architecture](01%20-%20Architecture.md), which describes the high-level layering.
 
 ---
 
@@ -12,7 +12,7 @@ AN.MediatR is organized into three top-level folders inside the repository:
 |--------|----------|
 | `src/` | The two NuGet packages: `MediatR` and `MediatR.Contracts` |
 | `samples/` | Ten sample projects showing integration patterns |
-| `test/` | Three test projects (unit, DI, benchmarks) |
+| `test/` | Two test projects (unit/DI, benchmarks) |
 
 ---
 
@@ -22,23 +22,19 @@ AN.MediatR is organized into three top-level folders inside the repository:
 
 The main library. Produces the `MediatR` NuGet package.
 
-- **Target frameworks**: `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`, and `net462` (Windows only).
+- **Target frameworks**: `netstandard2.0;net6.0`.
 - **Nullable**: enabled.
 - **Strong-named**: yes, via `..\..\MediatR.snk`.
 - **XML docs**: generated (`GenerateDocumentationFile = true`).
-- **Package metadata**: package icon, README, license file (`LICENSE.md`), `PackageRequireLicenseAcceptance = true`, project URL `https://mediatr.io`.
-- **Versioning**: `MinVer` with tag prefix `v` (e.g. `v13.2.0`).
-- **MSBuild target**: `EmbedBuildDate` runs before `CoreCompile`. It executes `git log -1 --format=%cI` and writes the ISO-8601 build date into an `[assembly: AssemblyMetadata("BuildDateUtc", "...")]` attribute used by the perpetual-license logic (`BuildInfo.cs`).
+- **Package metadata**: package icon, README, Apache-2.0 license expression, project URL.
+- **Versioning**: `MinVer` with tag prefix `v` (e.g. `v12.5.0`).
 - **Dependencies**:
-  - `IsExternalInit` (dev-only polyfill) — enables `init`-only properties on `netstandard2.0` / `net462`.
+  - `IsExternalInit` (dev-only polyfill) — enables `init`-only properties on `netstandard2.0`.
   - `MediatR.Contracts` (version `[2.0.1, 3.0.0)`).
-  - `Microsoft.Bcl.AsyncInterfaces` (only on `netstandard2.0`).
-  - `Microsoft.Extensions.DependencyInjection.Abstractions` v10+.
-  - `Microsoft.Extensions.Logging.Abstractions` v10+.
-  - `Microsoft.IdentityModel.JsonWebTokens` v8.14+ (required by the licensing subsystem).
+  - `Microsoft.Bcl.AsyncInterfaces` v8.0.0 (only on `netstandard2.0`) — provides `IAsyncEnumerable<T>`.
+  - `Microsoft.Extensions.DependencyInjection.Abstractions` v8.0.0.
   - `Microsoft.SourceLink.GitHub` 8.0.0 (dev-only).
   - `MinVer` 6.0.0 (dev-only).
-- **`InternalsVisibleTo`**: exposes internal types to `MediatR.Tests` (signed public key hash).
 
 Folder layout:
 
@@ -49,17 +45,10 @@ src/MediatR/
 ├── Internal/
 │   ├── HandlersOrderer.cs
 │   └── ObjectDetails.cs
-├── Licensing/
-│   ├── BuildInfo.cs
-│   ├── Edition.cs
-│   ├── License.cs
-│   ├── LicenseAccessor.cs
-│   ├── LicenseValidator.cs
-│   └── ProductType.cs
 ├── MicrosoftExtensionsDI/
-│   ├── MediatRServiceCollectionExtensions.cs
 │   ├── MediatrServiceConfiguration.cs
-│   └── RequestExceptionActionProcessorStrategy.cs
+│   ├── RequestExceptionActionProcessorStrategy.cs
+│   └── ServiceCollectionExtensions.cs
 ├── NotificationPublishers/
 │   ├── ForeachAwaitPublisher.cs
 │   └── TaskWhenAllPublisher.cs
@@ -91,13 +80,14 @@ src/MediatR/
 ├── Mediator.cs
 ├── MediatR.csproj
 ├── NotificationHandlerExecutor.cs
-├── TypeForwardings.cs
-└── license.txt
+└── TypeForwardings.cs
 ```
+
+> Note: unlike the v13+ upstream, this tree has **no `Licensing/` folder**, no `license.txt` embedded resource, no `BuildInfo.cs`, no `EmbedBuildDate` MSBuild target. There is no runtime licensing subsystem.
 
 ### `src/MediatR.Contracts/MediatR.Contracts.csproj`
 
-A minimal, dependency-free package containing just the contract interfaces. Produces the `MediatR.Contracts` NuGet package.
+A minimal, dependency-free package containing just the contract interfaces.
 
 - **Target framework**: `netstandard2.0` only.
 - **License**: `Apache-2.0` (`PackageLicenseExpression`).
@@ -115,7 +105,7 @@ src/MediatR.Contracts/
 └── MediatR.Contracts.csproj
 ```
 
-See [Contracts Package](14%20-%20Contracts_Package.md) for rationale and usage.
+See [Contracts Package](13%20-%20Contracts_Package.md) for rationale and usage.
 
 ---
 
@@ -140,9 +130,9 @@ The typical pattern in every sample is:
 
 1. Build the DI container and register MediatR + handlers.
 2. Resolve `IMediator`.
-3. Hand control to the shared `Runner.Run(...)` method in `MediatR.Examples` which sends `Ping`, publishes `Pinged`, sends `Jing` (expected to fail), optionally streams `Sing`, and exercises exception handlers / actions.
+3. Hand control to the shared `Runner.Run(...)` method in `MediatR.Examples`.
 
-See [DI Container Integration](16%20-%20DI_Container_Integration.md) for container-specific setup.
+See [DI Container Integration](15%20-%20DI_Container_Integration.md) for container-specific setup.
 
 ---
 
@@ -150,7 +140,7 @@ See [DI Container Integration](16%20-%20DI_Container_Integration.md) for contain
 
 ### `test/MediatR.Tests`
 
-The core xUnit test suite. Covers:
+The full xUnit test suite. Located at `test/MediatR.Tests/`. Covers:
 
 - Request and response handling (including `Unit`-returning void requests).
 - Notification publishing (sequential, parallel, custom publishers).
@@ -158,22 +148,10 @@ The core xUnit test suite. Covers:
 - Pre and post-processors.
 - Exception handlers and actions (with `HandlersOrderer` priority assertions).
 - Stream handlers and stream pipeline behaviors.
-- Licensing tests (valid/invalid/expired/perpetual keys, warning logs).
 - `ObjectDetails` comparison semantics.
+- `AddMediatR(...)` registration, DI scanning, open-generic handler registration, generic-registration limits — in the `MicrosoftExtensionsDI/` sub-folder.
 
-Tests are allowed to see `internal` types via the `InternalsVisibleTo` attribute on `MediatR.csproj`.
-
-### `test/MediatR.DependencyInjectionTests`
-
-Tests that exercise `AddMediatR(...)` and `ServiceRegistrar` behavior:
-
-- Scanning the right assemblies.
-- Transient vs. singleton lifetime overrides.
-- Closed and open-generic handler registration.
-- Assembly scanning limits (`MaxGenericTypeParameters`, `MaxTypesClosing`, `MaxGenericTypeRegistrations`, `RegistrationTimeout`).
-- Custom `TypeEvaluator` filters.
-- Automatic processor registration (`AutoRegisterRequestProcessors`).
-- Internal/private handler visibility edge cases.
+(In v12.5 there is no separate `MediatR.DependencyInjectionTests` project — the DI tests live under `MediatR.Tests/MicrosoftExtensionsDI/`.)
 
 ### `test/MediatR.Benchmarks`
 
@@ -202,13 +180,13 @@ Dedicated script that builds and packs only `MediatR.Contracts` with `Continuous
 
 Pushes every `.nupkg` in `./artifacts` to the NuGet feed specified by environment variables `NUGET_URL` and `NUGET_API_KEY`, using `--skip-duplicate`.
 
-See [Build, Test & Publish](17%20-%20Build_Test_Publish.md) for details.
+See [Build, Test & Publish](16%20-%20Build_Test_Publish.md) for details.
 
 ---
 
 ## Solution file
 
-`MediatR.slnx` uses the new XML-based solution format (an alternative to the legacy `.sln` text format). Every project above is referenced there. Some Visual Studio / Rider versions need an extension or a recent SDK to open `.slnx` files.
+`MediatR.sln` uses the classic text-based `.sln` format. Every project above is referenced there.
 
 ---
 
@@ -216,9 +194,9 @@ See [Build, Test & Publish](17%20-%20Build_Test_Publish.md) for details.
 
 | File | Purpose |
 |------|---------|
-| `Directory.Build.props` | Shared MSBuild properties (language version, treat warnings as errors, suppressed warning codes). |
+| `Directory.Build.props` | Shared MSBuild properties (language version 10, treat warnings as errors, suppressed warning codes). |
 | `MediatR.snk` | Strong-name signing key for both `MediatR` and `MediatR.Contracts`. |
 | `NuGet.Config` | NuGet feed configuration. |
-| `LICENSE.md` | Dual licensing notice (RPL 1.5 / commercial). |
+| `LICENSE` | Apache-2.0 full license text. |
 | `README.md` | Quickstart, also packed as the NuGet README for `MediatR`. |
 | `assets/logo/gradient_128x128.png` | Package icon. |

@@ -1,16 +1,15 @@
-# Usage Examples
+# Ejemplos de Uso
 
-Practical recipes covering the most common scenarios. Each example is self-contained and uses only the public AN.MediatR surface.
+Recetas prácticas cubriendo los escenarios más comunes. Cada ejemplo es autocontenido y usa solo la superficie pública de AN.MediatR.
 
-Every sample assumes you've wired up DI with logging:
+Cada muestra asume que has configurado DI con logging:
 
 ```csharp
 var services = new ServiceCollection();
-services.AddLogging();
+services.AddLogging(); // opcional — AN.MediatR no hace logging por sí misma
 services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    // cfg.LicenseKey = "..."; // optional
 });
 var provider = services.BuildServiceProvider();
 var mediator = provider.GetRequiredService<IMediator>();
@@ -18,7 +17,7 @@ var mediator = provider.GetRequiredService<IMediator>();
 
 ---
 
-## 1. Simple request / response
+## 1. Request/response simple
 
 ```csharp
 public record GetCustomerById(int Id) : IRequest<Customer>;
@@ -32,15 +31,15 @@ public class GetCustomerByIdHandler : IRequestHandler<GetCustomerById, Customer>
         => _repo.FindAsync(request.Id, ct);
 }
 
-// Dispatch
+// Despacho
 Customer customer = await mediator.Send(new GetCustomerById(42));
 ```
 
-Exactly one handler per request type. Exceptions bubble up to the caller.
+Exactamente un handler por tipo de request. Las excepciones suben al llamador.
 
 ---
 
-## 2. Void command
+## 2. Comando void
 
 ```csharp
 public record DeleteCustomer(int Id) : IRequest;
@@ -57,11 +56,11 @@ public class DeleteCustomerHandler : IRequestHandler<DeleteCustomer>
 await mediator.Send(new DeleteCustomer(42));
 ```
 
-Internally the return type is `Task<Unit>`, but the `Mediator.Send<TRequest>(TRequest)` overload returns `Task` so you never see `Unit`.
+Internamente el tipo de retorno es `Task<Unit>`, pero `Mediator.Send<TRequest>(TRequest)` devuelve `Task` así que nunca ves `Unit`.
 
 ---
 
-## 3. Notification with multiple handlers
+## 3. Notificación con varios handlers
 
 ```csharp
 public record CustomerCreated(int Id, string Email) : INotification;
@@ -79,9 +78,9 @@ public class IndexForSearch : INotificationHandler<CustomerCreated>
 await mediator.Publish(new CustomerCreated(42, "alice@example.com"));
 ```
 
-By default handlers run sequentially (`ForeachAwaitPublisher`). If the first throws, the second does **not** run.
+Por defecto los handlers corren secuencialmente (`ForeachAwaitPublisher`). Si el primero lanza, el segundo **no** corre.
 
-### Parallel dispatch
+### Dispatch paralelo
 
 ```csharp
 services.AddMediatR(cfg =>
@@ -91,11 +90,11 @@ services.AddMediatR(cfg =>
 });
 ```
 
-See [Notification Publishers](09%20-%20Notification_Publishers.md).
+Ver [Publicadores de Notificaciones](09%20-%20Publicadores_Notificaciones.md).
 
 ---
 
-## 4. Synchronous notification handler
+## 4. Handler de notificación síncrono
 
 ```csharp
 public class LogCustomer : NotificationHandler<CustomerCreated>
@@ -105,13 +104,13 @@ public class LogCustomer : NotificationHandler<CustomerCreated>
 }
 ```
 
-`NotificationHandler<TNotification>` wraps your sync `Handle` in `Task.CompletedTask` automatically.
+`NotificationHandler<TNotification>` envuelve tu `Handle` síncrono en `Task.CompletedTask` automáticamente.
 
 ---
 
-## 5. Cross-cutting pipeline behavior
+## 5. Pipeline behavior transversal
 
-Open-generic logging + timing behavior that applies to every request:
+Behavior abierto de logging + timing que aplica a cada request:
 
 ```csharp
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
@@ -138,7 +137,7 @@ services.AddMediatR(cfg =>
 
 ---
 
-## 6. Validation behavior
+## 6. Behavior de validación
 
 ```csharp
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
@@ -165,13 +164,13 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     }
 }
 
-// Register validators (any, e.g. FluentValidation) + the behavior
+// Registra validadores (cualquier FluentValidation etc.) + el behavior
 cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 ```
 
 ---
 
-## 7. Caching behavior (short-circuit)
+## 7. Behavior de caching (cortocircuito)
 
 ```csharp
 public interface ICacheable { string CacheKey { get; } }
@@ -194,14 +193,14 @@ public class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 }
 ```
 
-The `where TRequest : ICacheable` constraint means this behavior is only resolved (and therefore invoked) for requests that implement `ICacheable`. DI handles this for you.
+La restricción `where TRequest : ICacheable` hace que este behavior solo se resuelva (y por tanto invoque) para requests que implementen `ICacheable`. DI lo gestiona por ti.
 
 ---
 
-## 8. Transaction behavior
+## 8. Behavior de transacción
 
 ```csharp
-public interface ITransactional { }   // marker
+public interface ITransactional { }   // marcador
 
 public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : ITransactional, notnull
@@ -219,11 +218,11 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
 }
 ```
 
-Commit on success, let the caller's unhandled exception roll back via `DisposeAsync`.
+Commit en éxito; deja que una excepción del llamador haga rollback vía `DisposeAsync`.
 
 ---
 
-## 9. Pre-processor (enrichment)
+## 9. Procesador pre (enriquecimiento)
 
 ```csharp
 public interface IHasUserContext { string? UserId { get; set; } }
@@ -250,7 +249,7 @@ services.AddMediatR(cfg =>
 
 ---
 
-## 10. Post-processor (audit)
+## 10. Procesador post (auditoría)
 
 ```csharp
 public class AuditCommand<TRequest, TResponse> : IRequestPostProcessor<TRequest, TResponse>
@@ -268,7 +267,7 @@ cfg.AddOpenRequestPostProcessor(typeof(AuditCommand<,>));
 
 ---
 
-## 11. Exception action (log + rethrow)
+## 11. Exception action (log + relanzar)
 
 ```csharp
 public class LogException<TRequest> : IRequestExceptionAction<TRequest, Exception>
@@ -279,17 +278,17 @@ public class LogException<TRequest> : IRequestExceptionAction<TRequest, Exceptio
 
     public Task Execute(TRequest request, Exception ex, CancellationToken ct)
     {
-        _logger.LogError(ex, "Error while handling {Request}: {Message}", typeof(TRequest).Name, ex.Message);
+        _logger.LogError(ex, "Error handling {Request}: {Message}", typeof(TRequest).Name, ex.Message);
         return Task.CompletedTask;
     }
 }
 ```
 
-Assembly scanning automatically picks this up. Always rethrows — use for observation, not recovery.
+El escaneo lo recoge automáticamente. Siempre relanza — úsalo para observación, no recuperación.
 
 ---
 
-## 12. Exception handler (recovery with default response)
+## 12. Exception handler (recuperación con respuesta por defecto)
 
 ```csharp
 public class TranslateNotFoundToDefault<TRequest, TResponse>
@@ -306,11 +305,11 @@ public class TranslateNotFoundToDefault<TRequest, TResponse>
 }
 ```
 
-If the handler throws `EntityNotFoundException`, the pipeline swallows it and the caller receives a default-constructed `TResponse`.
+Si el handler lanza `EntityNotFoundException`, el pipeline la traga y el llamador recibe un `TResponse` por defecto.
 
 ---
 
-## 13. Streaming — minimal
+## 13. Streaming — mínimo
 
 ```csharp
 public record TailLogs(string Category) : IStreamRequest<LogEntry>;
@@ -339,7 +338,7 @@ await foreach (var entry in mediator.CreateStream(new TailLogs("api")))
 
 ---
 
-## 14. Streaming with pipeline behavior
+## 14. Streaming con pipeline behavior
 
 ```csharp
 public class TimingStreamBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
@@ -366,25 +365,25 @@ cfg.AddOpenStreamBehavior(typeof(TimingStreamBehavior<,>));
 
 ---
 
-## 15. Dynamic dispatch
+## 15. Dispatch dinámico
 
 ```csharp
-object request = LoadRequestFromQueue();           // runtime type only
-object? response = await mediator.Send(request);   // dynamic
+object request = LoadRequestFromQueue();           // tipo solo en runtime
+object? response = await mediator.Send(request);   // dinámico
 ```
 
-Also available for notifications:
+También disponible para notificaciones:
 
 ```csharp
 INotification notification = BuildNotification();
 await mediator.Publish((object)notification);
 ```
 
-Useful for API gateways, message relays, and generic test harnesses.
+Útil para API gateways, relays de mensajes y arneses genéricos de test.
 
 ---
 
-## 16. ASP.NET Core minimal API
+## 16. Minimal API de ASP.NET Core
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -409,7 +408,7 @@ app.Run();
 
 ---
 
-## 17. ASP.NET Core controller
+## 17. Controlador de ASP.NET Core
 
 ```csharp
 [ApiController]
@@ -429,11 +428,11 @@ public class OrdersController : ControllerBase
 }
 ```
 
-Prefer injecting `ISender` (or `IPublisher`) over `IMediator` when you only need one direction — it makes the method's intent clearer and tests simpler.
+Prefiere inyectar `ISender` (o `IPublisher`) sobre `IMediator` cuando solo necesitas una dirección — deja la intención clara y facilita los tests.
 
 ---
 
-## 18. Unit-testing a handler
+## 18. Test unitario de un handler
 
 ```csharp
 [Fact]
@@ -450,11 +449,11 @@ public async Task GetCustomerById_returns_customer()
 }
 ```
 
-Note: you can test handlers directly — no need to resolve them via `IMediator`. That's one of the advantages of the mediator pattern.
+Nota: los handlers se pueden testear directamente — no hace falta resolverlos vía `IMediator`. Una de las ventajas del patrón mediator.
 
 ---
 
-## 19. Unit-testing a behavior
+## 19. Test unitario de un behavior
 
 ```csharp
 [Fact]
@@ -469,14 +468,14 @@ public async Task ValidationBehavior_throws_on_validation_failure()
     await Assert.ThrowsAsync<ValidationException>(() =>
         behavior.Handle(
             new Ping(),
-            _ => Task.FromResult(new Pong()),   // fake "next"
+            _ => Task.FromResult(new Pong()),   // "next" falso
             default));
 }
 ```
 
 ---
 
-## 20. Integration test with a real container
+## 20. Test de integración con contenedor real
 
 ```csharp
 [Fact]
@@ -497,7 +496,7 @@ public async Task Roundtrip_via_container()
 
 ---
 
-## 21. Multiple assemblies
+## 21. Múltiples ensamblados
 
 ```csharp
 services.AddMediatR(cfg =>
@@ -509,11 +508,11 @@ services.AddMediatR(cfg =>
 });
 ```
 
-All assemblies are scanned in one pass.
+Todos los ensamblados se escanean en una sola pasada.
 
 ---
 
-## 22. Conditional behavior registration
+## 22. Registro condicional de behaviors
 
 ```csharp
 services.AddMediatR(cfg =>
@@ -523,11 +522,11 @@ services.AddMediatR(cfg =>
 });
 ```
 
-Only types decorated with `[Handler]` are registered. Useful for opting types in/out explicitly.
+Solo los tipos decorados con `[Handler]` se registran. Útil para opt-in/opt-out explícito.
 
 ---
 
-## Further reading
+## Lectura adicional
 
-- The `samples/MediatR.Examples*` projects contain runnable end-to-end demos for each feature — start there when experimenting.
-- Most common CQRS frameworks (Ardalis.Specification, Clean.Architecture templates, etc.) are already built on MediatR-compatible contracts. Our pipeline behaviors plug into them verbatim.
+- Los proyectos `samples/MediatR.Examples*` contienen demos ejecutables end-to-end para cada característica — empieza por ahí al experimentar.
+- La mayoría de frameworks CQRS comunes (Ardalis.Specification, plantillas Clean.Architecture, etc.) ya están construidos sobre contratos compatibles con MediatR. Nuestros pipeline behaviors se enchufan sin modificaciones.
