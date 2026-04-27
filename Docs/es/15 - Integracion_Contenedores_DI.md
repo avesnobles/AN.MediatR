@@ -243,7 +243,7 @@ Si registras `IMediator` como scoped, debes **resolverlo dentro de un scope**. L
 
 ### 3. Registro de behaviors de genérico abierto
 
-Si tu behavior tiene un tipo de respuesta genérico anidado (p. ej. `IPipelineBehavior<TRequest, Result<T>>`), la mayoría de contenedores no pueden auto-cerrarlo. Para contenedores de terceros, quizá necesites registrar cada variante cerrada manualmente o usar funcionalidades específicas del contenedor.
+Si tu behavior tiene un tipo de respuesta genérico anidado (p. ej. `IPipelineBehavior<TRequest, Result<T>>`), la mayoría de contenedores no pueden auto-cerrarlo. El registrar nativo de AN.MediatR lo gestiona vía `RegisterClosedBehaviorsFromAssemblies` — basta con registrar el behavior abierto con `cfg.AddOpenBehavior(...)` y las variantes cerradas se generan automáticamente. Para contenedores de terceros que no pasen por `AddMediatR(...)`, quizá necesites registrar cada variante cerrada manualmente o usar funcionalidades específicas del contenedor.
 
 ### 4. Caché de wrappers
 

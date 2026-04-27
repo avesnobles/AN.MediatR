@@ -270,13 +270,38 @@ public static void AddRequiredServices(IServiceCollection services, MediatRServi
 
     // 6) Explicit pipeline behaviors
     foreach (var serviceDescriptor in serviceConfiguration.BehaviorsToRegister)
+    {
         services.TryAddEnumerable(serviceDescriptor);
+
+        // For open behaviors whose TResponse is a nested generic (e.g. List<T>, Result<T>),
+        // the DI container cannot close them correctly via positional mapping.
+        // Register explicitly-closed versions by scanning assemblies for matching request types.
+        if (serviceDescriptor.ImplementationType != null
+            && serviceDescriptor.ServiceType == typeof(IPipelineBehavior<,>)
+            && serviceDescriptor.ImplementationType.IsOpenGeneric()
+            && HasNestedGenericResponseType(serviceDescriptor.ImplementationType))
+        {
+            RegisterClosedBehaviorsFromAssemblies(
+                serviceDescriptor.ImplementationType, services,
+                serviceConfiguration.AssembliesToRegister, serviceDescriptor.Lifetime);
+        }
+    }
 
     // 7) Explicit stream behaviors
     foreach (var sd in serviceConfiguration.StreamBehaviorsToRegister)
         services.TryAddEnumerable(sd);
 }
 ```
+
+### Nested-generic response types
+
+If your open behavior's `TResponse` is itself generic (e.g. `IPipelineBehavior<TRequest, List<T>>` or `IPipelineBehavior<TRequest, Result<T>>`), `Microsoft.Extensions.DependencyInjection` cannot close it purely by positional mapping of the outer generics. `ServiceRegistrar.RegisterClosedBehaviorsFromAssemblies` detects this case via `HasNestedGenericResponseType`, walks every `IRequest<T>` in the scanned assemblies, matches the nested pattern (via the internal `TryMatchType`), and registers an explicitly-closed `IPipelineBehavior<ConcreteRequest, ConcreteResponse>` for each match.
+
+You don't need to do anything special — just register the open behavior with `cfg.AddOpenBehavior(typeof(MyBehavior<,>))` and AN.MediatR handles the closing.
+
+### F# and other awkward assemblies
+
+`ServiceRegistrar` uses a `GetLoadableDefinedTypes()` helper that catches `ReflectionTypeLoadException` and falls back to `ex.Types.OfType<Type>()`. This makes assembly scanning robust against F# assemblies (which can throw on `DefinedTypes` when they contain `inref` parameters or other reflection-unfriendly types) and dynamically-generated assemblies where some types fail to load. If you hit a `ReflectionTypeLoadException` during `AddMediatR(...)`, the registrar simply ignores the unloadable types and continues scanning the rest.
 
 ---
 

@@ -164,20 +164,21 @@ Environment variables used by `Push.ps1`:
 
 ## Target framework matrix
 
-`MediatR` produces binaries for two TFMs:
+`MediatR` produces binaries for several TFMs:
 
 | TFM | Notes |
 |-----|-------|
 | `netstandard2.0` | The widest compatibility target — used from any runtime that supports .NET Standard 2.0 (Xamarin, Unity, older .NET Framework). Depends on `Microsoft.Bcl.AsyncInterfaces` for `IAsyncEnumerable` support. |
-| `net6.0` | .NET 6 (current as of MediatR v12.5). |
+| `net8.0` | Current LTS .NET. |
+| `net9.0` | Current STS .NET. |
+| `net10.0` | Upcoming LTS — supported as soon as the SDK is available. |
+| `net462` | .NET Framework 4.6.2, only produced on Windows builds (conditional in `MediatR.csproj`). |
 
 `MediatR.Contracts` targets only `netstandard2.0`. Since it has no runtime logic, one TFM suffices.
 
-> If the AN fork needs newer target frameworks (net8.0, net9.0, etc.) it can add them in the `<TargetFrameworks>` list of `MediatR.csproj` — nothing in the library specifically requires the older TFMs.
-
 ### Polyfills
 
-- `IsExternalInit` (dev-only reference): enables C# `init` accessors on `netstandard2.0`.
+- `IsExternalInit` (dev-only reference): enables C# `init` accessors on `netstandard2.0` and `net462`.
 - `Microsoft.Bcl.AsyncInterfaces` (`netstandard2.0` only): provides `IAsyncEnumerable<T>` and `IAsyncDisposable` for the streaming API.
 
 ---
@@ -188,8 +189,11 @@ Environment variables used by `Push.ps1`:
 
 ```xml
 <PropertyGroup>
-  <LangVersion>10.0</LangVersion>
-  <NoWarn>$(NoWarn);CS1701;CS1702;CS1591</NoWarn>
+  <IsMac>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::get_OSX())))</IsMac>
+  <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::get_Windows())))</IsWindows>
+
+  <LangVersion>13.0</LangVersion>
+  <NoWarn>$(NoWarn);CS1701;CS1702;CS1591;NU1900</NoWarn>
   <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 </PropertyGroup>
 ```

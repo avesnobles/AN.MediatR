@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find . -iname \"*.nupkg\")",
+      "Bash(find . -iname \"*.snupkg\")",
+      "Bash(ls src/MediatR/bin/Release/)"
+    ]
+  }
+}

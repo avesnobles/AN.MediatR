@@ -4,13 +4,13 @@
 
 | Área | Tecnología / Versión |
 |------|----------------------|
-| Lenguaje | C# 10 (`LangVersion` = `10.0` en `Directory.Build.props`) |
-| Runtime | .NET Standard 2.0, .NET 6 |
-| Frameworks destino (`MediatR`) | `netstandard2.0;net6.0` |
+| Lenguaje | C# 13 (`LangVersion` = `13.0` en `Directory.Build.props`) |
+| Runtime | .NET Standard 2.0, .NET 8, .NET 9, .NET 10, .NET Framework 4.6.2 (solo Windows) |
+| Frameworks destino (`MediatR`) | `netstandard2.0;net8.0;net9.0;net10.0` (+ `net462` en Windows) |
 | Frameworks destino (`MediatR.Contracts`) | `netstandard2.0` |
-| Abstracciones DI | `Microsoft.Extensions.DependencyInjection.Abstractions` (v8.0.0) |
+| Abstracciones DI | `Microsoft.Extensions.DependencyInjection.Abstractions` (v10.0.0) |
 | Polyfill | `IsExternalInit` (para que `init` funcione en netstandard2.0) |
-| Polyfill asíncrono | `Microsoft.Bcl.AsyncInterfaces` (v8.0.0, solo en netstandard2.0) |
+| Polyfill asíncrono | `Microsoft.Bcl.AsyncInterfaces` (v10.0.0, solo en netstandard2.0) |
 | Source linking | `Microsoft.SourceLink.GitHub` (8.0.0) |
 | Versionado | `MinVer` (6.0.0) con prefijo de tag `v` |
 | Firma | Strong-named con `MediatR.snk` |
@@ -21,7 +21,7 @@
 
 Fuentes: [Directory.Build.props](../../Directory.Build.props), [src/MediatR/MediatR.csproj](../../src/MediatR/MediatR.csproj), [src/MediatR.Contracts/MediatR.Contracts.csproj](../../src/MediatR.Contracts/MediatR.Contracts.csproj).
 
-> **Punto de partida del fork**: AN.MediatR arranca desde **MediatR v12.5** (`jbogard/MediatR`, Apache-2.0). A partir de ese commit, los cambios los realiza el equipo AN. Todo lo etiquetado como "nuevo en AN.MediatR" más abajo se añadió tras el fork.
+> **Punto de partida del fork**: AN.MediatR arranca desde **MediatR v12.5** (`jbogard/MediatR`, Apache-2.0). El equipo AN también ha portado selectivamente mejoras no-relacionadas-con-licenciamiento desde el upstream v13+ (resiliencia del scanner ante ensamblados F#, soporte de behaviors con tipo de respuesta genérico anidado, deduplicación de handlers de notificaciones, TFMs más nuevos). El subsistema de licenciamiento del upstream **no** se ha portado a propósito.
 
 ---
 

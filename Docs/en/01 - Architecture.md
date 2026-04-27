@@ -4,13 +4,13 @@
 
 | Area | Technology / Version |
 |------|----------------------|
-| Language | C# 10 (`LangVersion` = `10.0` in `Directory.Build.props`) |
-| Runtime | .NET Standard 2.0, .NET 6 |
-| Target frameworks (`MediatR`) | `netstandard2.0;net6.0` |
+| Language | C# 13 (`LangVersion` = `13.0` in `Directory.Build.props`) |
+| Runtime | .NET Standard 2.0, .NET 8, .NET 9, .NET 10, .NET Framework 4.6.2 (Windows only) |
+| Target frameworks (`MediatR`) | `netstandard2.0;net8.0;net9.0;net10.0` (+ `net462` on Windows) |
 | Target frameworks (`MediatR.Contracts`) | `netstandard2.0` |
-| DI abstractions | `Microsoft.Extensions.DependencyInjection.Abstractions` (v8.0.0) |
+| DI abstractions | `Microsoft.Extensions.DependencyInjection.Abstractions` (v10.0.0) |
 | Polyfill | `IsExternalInit` (so `init` works on netstandard2.0) |
-| Async polyfill | `Microsoft.Bcl.AsyncInterfaces` (v8.0.0, only on netstandard2.0) |
+| Async polyfill | `Microsoft.Bcl.AsyncInterfaces` (v10.0.0, only on netstandard2.0) |
 | Source linking | `Microsoft.SourceLink.GitHub` (8.0.0) |
 | Versioning | `MinVer` (6.0.0) with tag prefix `v` |
 | Signing | Strong-named with `MediatR.snk` |
@@ -21,7 +21,7 @@
 
 Source: [Directory.Build.props](../../Directory.Build.props), [src/MediatR/MediatR.csproj](../../src/MediatR/MediatR.csproj), [src/MediatR.Contracts/MediatR.Contracts.csproj](../../src/MediatR.Contracts/MediatR.Contracts.csproj).
 
-> **Fork baseline**: AN.MediatR starts from **MediatR v12.5** (`jbogard/MediatR`, Apache-2.0). From that commit onwards, future changes are made by the AN team. Anything marked as "new in AN.MediatR" below was added after the fork.
+> **Fork baseline**: AN.MediatR starts from **MediatR v12.5** (`jbogard/MediatR`, Apache-2.0). The AN team has additionally cherry-picked selected non-licensing improvements from upstream v13+ (F# assembly scanning resilience, nested-generic pipeline behavior support, notification-handler deduplication, newer target frameworks). The upstream licensing subsystem is deliberately **not** ported.
 
 ---
 

@@ -22,7 +22,7 @@ AN.MediatR is organized into three top-level folders inside the repository:
 
 The main library. Produces the `MediatR` NuGet package.
 
-- **Target frameworks**: `netstandard2.0;net6.0`.
+- **Target frameworks**: `netstandard2.0;net8.0;net9.0;net10.0` (plus `net462` on Windows).
 - **Nullable**: enabled.
 - **Strong-named**: yes, via `..\..\MediatR.snk`.
 - **XML docs**: generated (`GenerateDocumentationFile = true`).
@@ -31,8 +31,8 @@ The main library. Produces the `MediatR` NuGet package.
 - **Dependencies**:
   - `IsExternalInit` (dev-only polyfill) — enables `init`-only properties on `netstandard2.0`.
   - `MediatR.Contracts` (version `[2.0.1, 3.0.0)`).
-  - `Microsoft.Bcl.AsyncInterfaces` v8.0.0 (only on `netstandard2.0`) — provides `IAsyncEnumerable<T>`.
-  - `Microsoft.Extensions.DependencyInjection.Abstractions` v8.0.0.
+  - `Microsoft.Bcl.AsyncInterfaces` v10.0.0 (only on `netstandard2.0`) — provides `IAsyncEnumerable<T>`.
+  - `Microsoft.Extensions.DependencyInjection.Abstractions` v10.0.0.
   - `Microsoft.SourceLink.GitHub` 8.0.0 (dev-only).
   - `MinVer` 6.0.0 (dev-only).
 

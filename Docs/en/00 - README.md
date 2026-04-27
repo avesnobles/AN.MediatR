@@ -83,6 +83,14 @@ It supports three message kinds:
 - without a runtime licensing subsystem;
 - free to evolve in the direction our projects need.
 
+**Changes relative to stock v12.5** (cherry-picked from upstream v13+, licensing excluded):
+- Notification handler **deduplication** at dispatch time — fixes #1118 where DI containers with contravariant notification-handler resolution (e.g. DryIoc) invoked the same handler twice for derived notifications.
+- **Nested-generic pipeline behavior support** — `AddOpenBehavior(typeof(MyBehavior<,>))` now works correctly when `TResponse` is itself generic (e.g. `List<T>`, `Result<T>`).
+- **F# assembly scanning resilience** — `ServiceRegistrar` catches `ReflectionTypeLoadException` and falls back to the loadable types, so F# assemblies (and other reflection-unfriendly assemblies) no longer crash `AddMediatR(...)`.
+- **Target frameworks** bumped from `netstandard2.0;net6.0` to `netstandard2.0;net8.0;net9.0;net10.0` plus `net462` on Windows.
+- `Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Bcl.AsyncInterfaces` bumped to **v10.0.0**.
+- `LangVersion` bumped to **C# 13**.
+
 ---
 
 ## How to read this documentation

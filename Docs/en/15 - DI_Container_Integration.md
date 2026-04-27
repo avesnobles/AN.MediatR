@@ -245,7 +245,7 @@ If you register `IMediator` as a scoped service, you must **resolve it within a 
 
 ### 3. Open-generic behavior registration
 
-If your behavior has a nested-generic response type (e.g. `IPipelineBehavior<TRequest, Result<T>>`), most containers cannot auto-close it. For third-party containers, you may need to register each closed variant manually or use container-specific open-generic closing features.
+If your behavior has a nested-generic response type (e.g. `IPipelineBehavior<TRequest, Result<T>>`), most containers cannot auto-close it. AN.MediatR's native registrar handles this via `RegisterClosedBehaviorsFromAssemblies` — you just register the open behavior with `cfg.AddOpenBehavior(...)` and the closed variants are produced automatically. For third-party containers that bypass `AddMediatR(...)`, you may need to register each closed variant manually or use container-specific open-generic closing features.
 
 ### 4. Caching of wrappers
 

@@ -249,13 +249,38 @@ public static void AddRequiredServices(IServiceCollection services, MediatRServi
 
     // 6) Pipeline behaviors explícitos
     foreach (var serviceDescriptor in serviceConfiguration.BehaviorsToRegister)
+    {
         services.TryAddEnumerable(serviceDescriptor);
+
+        // Para behaviors abiertos cuyo TResponse es un genérico anidado (p. ej. List<T>, Result<T>),
+        // el contenedor DI no puede cerrarlos con el mapping posicional estándar.
+        // Registra versiones explícitamente cerradas escaneando los ensamblados.
+        if (serviceDescriptor.ImplementationType != null
+            && serviceDescriptor.ServiceType == typeof(IPipelineBehavior<,>)
+            && serviceDescriptor.ImplementationType.IsOpenGeneric()
+            && HasNestedGenericResponseType(serviceDescriptor.ImplementationType))
+        {
+            RegisterClosedBehaviorsFromAssemblies(
+                serviceDescriptor.ImplementationType, services,
+                serviceConfiguration.AssembliesToRegister, serviceDescriptor.Lifetime);
+        }
+    }
 
     // 7) Stream behaviors explícitos
     foreach (var sd in serviceConfiguration.StreamBehaviorsToRegister)
         services.TryAddEnumerable(sd);
 }
 ```
+
+### Tipos de respuesta genéricos anidados
+
+Si tu behavior abierto tiene un `TResponse` que es a su vez genérico (p. ej. `IPipelineBehavior<TRequest, List<T>>` o `IPipelineBehavior<TRequest, Result<T>>`), `Microsoft.Extensions.DependencyInjection` no puede cerrarlo mediante el mapping posicional habitual. `ServiceRegistrar.RegisterClosedBehaviorsFromAssemblies` detecta el caso vía `HasNestedGenericResponseType`, recorre cada `IRequest<T>` de los ensamblados escaneados, empareja el patrón anidado (con el helper interno `TryMatchType`) y registra un `IPipelineBehavior<RequestConcreto, RespuestaConcreta>` explícitamente cerrado por cada match.
+
+No tienes que hacer nada especial — simplemente registra el behavior abierto con `cfg.AddOpenBehavior(typeof(MyBehavior<,>))` y AN.MediatR se encarga del cierre.
+
+### F# y otros ensamblados problemáticos
+
+`ServiceRegistrar` usa un helper `GetLoadableDefinedTypes()` que captura `ReflectionTypeLoadException` y cae a `ex.Types.OfType<Type>()`. Esto hace el escaneo robusto ante ensamblados F# (que pueden lanzar en `DefinedTypes` cuando contienen parámetros `inref` u otros tipos no amigables para la reflexión) y ante ensamblados generados dinámicamente con tipos que no cargan. Si aparece un `ReflectionTypeLoadException` durante `AddMediatR(...)`, el registrar ignora los tipos no-cargables y sigue con el resto.
 
 ---
 

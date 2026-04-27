@@ -163,11 +163,12 @@ Variables de entorno usadas por `Push.ps1`:
 | TFM | Notas |
 |-----|-------|
 | `netstandard2.0` | Compatibilidad más amplia. Depende de `Microsoft.Bcl.AsyncInterfaces` para `IAsyncEnumerable`. |
-| `net6.0` | .NET 6 (el actual en el momento de MediatR v12.5). |
+| `net8.0` | LTS actual. |
+| `net9.0` | STS actual. |
+| `net10.0` | Próxima LTS — soportado en cuanto el SDK esté disponible. |
+| `net462` | .NET Framework 4.6.2, solo producido en builds Windows (condicional en `MediatR.csproj`). |
 
 `MediatR.Contracts` apunta solo a `netstandard2.0`.
-
-> Si el fork AN necesita TFMs más nuevos (net8.0, net9.0, etc.), puede añadirlos en `<TargetFrameworks>` de `MediatR.csproj` — nada en la librería exige los antiguos específicamente.
 
 ### Polyfills
 
@@ -182,8 +183,11 @@ Variables de entorno usadas por `Push.ps1`:
 
 ```xml
 <PropertyGroup>
-  <LangVersion>10.0</LangVersion>
-  <NoWarn>$(NoWarn);CS1701;CS1702;CS1591</NoWarn>
+  <IsMac>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::get_OSX())))</IsMac>
+  <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::get_Windows())))</IsWindows>
+
+  <LangVersion>13.0</LangVersion>
+  <NoWarn>$(NoWarn);CS1701;CS1702;CS1591;NU1900</NoWarn>
   <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 </PropertyGroup>
 ```

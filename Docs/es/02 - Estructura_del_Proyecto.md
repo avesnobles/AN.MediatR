@@ -22,7 +22,7 @@ AN.MediatR se organiza en tres carpetas principales dentro del repositorio:
 
 La librería principal. Produce el paquete NuGet `MediatR`.
 
-- **Frameworks destino**: `netstandard2.0;net6.0`.
+- **Frameworks destino**: `netstandard2.0;net8.0;net9.0;net10.0` (más `net462` en Windows).
 - **Nullable**: activado.
 - **Strong-named**: sí, mediante `..\..\MediatR.snk`.
 - **Documentación XML**: generada (`GenerateDocumentationFile = true`).
@@ -31,8 +31,8 @@ La librería principal. Produce el paquete NuGet `MediatR`.
 - **Dependencias**:
   - `IsExternalInit` (solo dev) — permite propiedades `init` en `netstandard2.0`.
   - `MediatR.Contracts` (versión `[2.0.1, 3.0.0)`).
-  - `Microsoft.Bcl.AsyncInterfaces` v8.0.0 (solo en `netstandard2.0`) — aporta `IAsyncEnumerable<T>`.
-  - `Microsoft.Extensions.DependencyInjection.Abstractions` v8.0.0.
+  - `Microsoft.Bcl.AsyncInterfaces` v10.0.0 (solo en `netstandard2.0`) — aporta `IAsyncEnumerable<T>`.
+  - `Microsoft.Extensions.DependencyInjection.Abstractions` v10.0.0.
   - `Microsoft.SourceLink.GitHub` 8.0.0 (solo dev).
   - `MinVer` 6.0.0 (solo dev).
 

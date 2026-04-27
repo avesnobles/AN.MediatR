@@ -83,6 +83,14 @@ Soporta tres tipos de mensajes:
 - sin sistema de licenciamiento en runtime;
 - libre para evolucionar según las necesidades de nuestros proyectos.
 
+**Cambios respecto a la v12.5 original** (cherry-pick desde el upstream v13+, excluyendo licenciamiento):
+- **Deduplicación** de handlers de notificaciones en el dispatch — arregla el issue #1118 donde contenedores DI con resolución contravariante de handlers (p. ej. DryIoc) invocaban el mismo handler dos veces para notificaciones derivadas.
+- Soporte de **pipeline behaviors con tipo de respuesta genérico anidado** — `AddOpenBehavior(typeof(MyBehavior<,>))` ahora funciona cuando `TResponse` es a su vez genérico (p. ej. `List<T>`, `Result<T>`).
+- **Resiliencia del escaneo ante ensamblados F#** — `ServiceRegistrar` captura `ReflectionTypeLoadException` y cae a los tipos cargables, así que los ensamblados F# (y otros problemáticos para la reflexión) ya no rompen `AddMediatR(...)`.
+- **Frameworks destino** actualizados de `netstandard2.0;net6.0` a `netstandard2.0;net8.0;net9.0;net10.0` más `net462` en Windows.
+- `Microsoft.Extensions.DependencyInjection.Abstractions` y `Microsoft.Bcl.AsyncInterfaces` actualizados a **v10.0.0**.
+- `LangVersion` actualizado a **C# 13**.
+
 ---
 
 ## Cómo leer esta documentación
