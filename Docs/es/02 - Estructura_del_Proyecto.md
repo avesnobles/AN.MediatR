@@ -10,7 +10,7 @@ AN.MediatR se organiza en tres carpetas principales dentro del repositorio:
 
 | Carpeta | Contenido |
 |---------|-----------|
-| `src/` | Los dos paquetes NuGet: `AN.MediatR` y `AN.MediatR.Contracts` |
+| `src/` | Los tres paquetes NuGet: `AN.MediatR`, `AN.MediatR.Contracts` y `AN.MediatR.Extensions.Autofac.DependencyInjection` |
 | `samples/` | Diez proyectos de ejemplo con patrones de integración |
 | `test/` | Dos proyectos de test (unidad/DI, benchmarks) |
 
@@ -20,7 +20,7 @@ AN.MediatR se organiza en tres carpetas principales dentro del repositorio:
 
 ### `src/AN.MediatR/AN.MediatR.csproj`
 
-La librería principal. Produce el paquete NuGet `MediatR`.
+La librería principal. Produce el paquete NuGet `AN.MediatR`.
 
 - **Frameworks destino**: `netstandard2.0;net8.0;net9.0;net10.0` (más `net462` en Windows).
 - **Nullable**: activado.
@@ -30,11 +30,23 @@ La librería principal. Produce el paquete NuGet `MediatR`.
 - **Versionado**: `MinVer` con prefijo de tag `v` (p. ej. `v12.5.0`).
 - **Dependencias**:
   - `IsExternalInit` (solo dev) — permite propiedades `init` en `netstandard2.0`.
-  - `AN.MediatR.Contracts` (versión `[2.0.1, 3.0.0)`).
+  - `AN.MediatR.Contracts` (versión calculada por MinVer a partir del tag de release).
   - `Microsoft.Bcl.AsyncInterfaces` v10.0.0 (solo en `netstandard2.0`) — aporta `IAsyncEnumerable<T>`.
   - `Microsoft.Extensions.DependencyInjection.Abstractions` v10.0.0.
   - `Microsoft.SourceLink.GitHub` 8.0.0 (solo dev).
   - `MinVer` 6.0.0 (solo dev).
+
+### `src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj`
+
+Integración de AN.MediatR con Autofac. Es una adaptación del proyecto
+`MediatR.Extensions.Autofac.DependencyInjection` y referencia el proyecto local
+`AN.MediatR`, no el paquete upstream `MediatR`.
+
+- **Framework destino**: `netstandard2.0`.
+- **Dependencias**: `Autofac` 9.1.0 y `AN.MediatR`.
+- **Paquete**: `AN.MediatR.Extensions.Autofac.DependencyInjection`.
+- **Versionado**: `MinVer` con prefijo de tag `v`.
+- **Licencia**: MIT para la adaptación Autofac, con la atribución de CleanCode-Labs incluida en el paquete.
 
 Distribución de carpetas:
 
@@ -91,7 +103,7 @@ Paquete mínimo sin dependencias con solo las interfaces de contrato.
 
 - **Framework destino**: solo `netstandard2.0`.
 - **Licencia**: `Apache-2.0`.
-- **Versión**: fijada en `2.0.1` (no gestionada por `MinVer`).
+- **Versionado**: `MinVer` con prefijo de tag `v`, igual que los otros proyectos de paquete.
 - **Dependencias**: ninguna más allá de SourceLink (solo dev).
 
 Contenidos:
@@ -161,7 +173,9 @@ Microbenchmarks con `BenchmarkDotNet` para `Send`, `Publish`, `CreateStream` y o
 dotnet clean -c Release
 dotnet build -c Release
 dotnet test  -c Release --no-build -l trx --verbosity=normal
-dotnet pack  .\src\MediatR\MediatR.csproj -c Release -o .\artifacts --no-build
+dotnet pack  .\src\AN.MediatR\AN.MediatR.csproj -c Release -o .\artifacts --no-build
+dotnet pack  .\src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj -c Release -o .\artifacts --no-build
+dotnet pack  .\src\AN.MediatR.Extensions.Autofac.DependencyInjection\AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -c Release -o .\artifacts --no-build
 ```
 
 Clean + build + test + pack. Salida en `./artifacts`.

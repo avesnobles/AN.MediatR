@@ -14,7 +14,7 @@ function Exec
     [CmdletBinding()]
     param(
         [Parameter(Position=0,Mandatory=1)][scriptblock]$cmd,
-        [Parameter(Position=1,Mandatory=0)][string]$errorMessage = ($msgs.error_bad_command -f $cmd)
+        [Parameter(Position=1,Mandatory=0)][string]$errorMessage = "Error executing command: $cmd"
     )
     & $cmd
     if ($lastexitcode -ne 0) {
@@ -22,13 +22,20 @@ function Exec
     }
 }
 
-$artifacts = ".\artifacts"
-$contracts = ".\src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj"
+$repositoryRoot = $PSScriptRoot
+$artifacts = Join-Path $repositoryRoot "artifacts"
+$contracts = Join-Path $repositoryRoot "src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj"
 
 if(Test-Path $artifacts) { Remove-Item $artifacts -Force -Recurse }
 
-exec { & dotnet clean $contracts -c Release }
+Push-Location $repositoryRoot
+try {
+    exec { & dotnet clean $contracts -c Release }
 
-exec { & dotnet build $contracts -c Release -p:ContinuousIntegrationBuild=true }
+    exec { & dotnet build $contracts -c Release -p:ContinuousIntegrationBuild=true }
 
-exec { & dotnet pack $contracts -c Release -o $artifacts --no-build }
+    exec { & dotnet pack $contracts -c Release -o $artifacts --no-build }
+}
+finally {
+    Pop-Location
+}

@@ -1,7 +1,7 @@
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
 param(
     # Replace this placeholder with the UNC path of the internal NuGet folder.
-    [string]$NuGetSource = '\\(server_ip)\nuget',
+    [string]$NuGetSource = '\\<server>\nuget',
 
     # Perform the irreversible copy to the NuGet source after all validations succeed.
     [switch]$Publish
@@ -11,7 +11,6 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $repositoryRoot = $PSScriptRoot
-$placeholderSource = '\\(server_ip)\nuget'
 
 function Invoke-ExternalCommand {
     param(
@@ -66,6 +65,110 @@ function Assert-PackageExists {
     }
 }
 
+function Get-PackageContentHash {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $manifest = New-Object System.Text.StringBuilder
+        foreach ($entry in $archive.Entries | Sort-Object FullName) {
+            $entryHashAlgorithm = [System.Security.Cryptography.SHA256]::Create()
+            try {
+                $entryStream = $entry.Open()
+                try {
+                    $entryHash = [System.BitConverter]::ToString($entryHashAlgorithm.ComputeHash($entryStream)).Replace('-', '')
+                }
+                finally {
+                    $entryStream.Dispose()
+                }
+            }
+            finally {
+                $entryHashAlgorithm.Dispose()
+            }
+
+            [void]$manifest.Append($entry.FullName)
+            [void]$manifest.Append('|')
+            [void]$manifest.Append($entry.Length)
+            [void]$manifest.Append('|')
+            [void]$manifest.AppendLine($entryHash)
+        }
+
+        $manifestHashAlgorithm = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $manifestBytes = [System.Text.Encoding]::UTF8.GetBytes($manifest.ToString())
+            return [System.BitConverter]::ToString($manifestHashAlgorithm.ComputeHash($manifestBytes)).Replace('-', '')
+        }
+        finally {
+            $manifestHashAlgorithm.Dispose()
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
+function Get-PackageArtifacts {
+    param(
+        [Parameter(Mandatory = $true)][string]$ArtifactsPath,
+        [Parameter(Mandatory = $true)][string]$PackageId
+    )
+
+    $packageNamePattern = '^{0}\.(?<version>\d[^/]*)\.nupkg$' -f [regex]::Escape($PackageId)
+    $packageFiles = @(
+        Get-ChildItem -LiteralPath $ArtifactsPath -File |
+            Where-Object { $_.Name -match $packageNamePattern }
+    )
+
+    if ($packageFiles.Count -ne 1) {
+        throw "Expected exactly one package for '$PackageId' in '$ArtifactsPath', found $($packageFiles.Count)."
+    }
+
+    if ($packageFiles[0].Name -notmatch $packageNamePattern) {
+        throw "Unable to resolve the MinVer version from package '$($packageFiles[0].Name)'."
+    }
+
+    $packageVersion = $Matches.version
+    $symbolsPath = Join-Path $ArtifactsPath ("{0}.{1}.snupkg" -f $PackageId, $packageVersion)
+    Assert-PackageExists -Path $symbolsPath
+
+    return [PSCustomObject]@{
+        PackageId   = $PackageId
+        Version     = $packageVersion
+        PackagePath = $packageFiles[0].FullName
+        SymbolsPath = $symbolsPath
+    }
+}
+
+function Copy-PackageToSource {
+    param(
+        [Parameter(Mandatory = $true)][string]$PackagePath,
+        [Parameter(Mandatory = $true)][string]$DestinationDirectory
+    )
+
+    $destinationPath = Join-Path $DestinationDirectory (Split-Path -Leaf $PackagePath)
+    if (Test-Path -LiteralPath $destinationPath -PathType Leaf) {
+        $sourceHash = (Get-FileHash -LiteralPath $PackagePath -Algorithm SHA256).Hash
+        $destinationHash = (Get-FileHash -LiteralPath $destinationPath -Algorithm SHA256).Hash
+        if ($sourceHash -eq $destinationHash) {
+            Write-Host "Already present, skipping $(Split-Path -Leaf $PackagePath)."
+            return
+        }
+
+        $sourceContentHash = Get-PackageContentHash -Path $PackagePath
+        $destinationContentHash = Get-PackageContentHash -Path $destinationPath
+        if ($sourceContentHash -eq $destinationContentHash) {
+            Write-Host "Already present with equivalent package contents, skipping $(Split-Path -Leaf $PackagePath)."
+            return
+        }
+
+        throw "A different package with the same name already exists at '$destinationPath'. Source SHA256: $sourceHash. Existing SHA256: $destinationHash."
+    }
+
+    Copy-Item -LiteralPath $PackagePath -Destination $destinationPath
+}
+
 try {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         throw 'Git is required to resolve the release tag.'
@@ -75,8 +178,8 @@ try {
         throw '.NET SDK is required to build and package the release.'
     }
 
-    if ($NuGetSource -eq $placeholderSource) {
-        throw "NuGetSource still contains the placeholder '$placeholderSource'. Supply the internal UNC path with -NuGetSource."
+    if ($NuGetSource -match '^\\\\<[^>]+>\\') {
+        throw "NuGetSource still contains a placeholder: '$NuGetSource'. Supply the internal UNC path with -NuGetSource."
     }
 
     Assert-CleanWorkingTree -RepositoryPath $repositoryRoot
@@ -105,25 +208,58 @@ try {
 
         Write-Host 'Building, testing, and packing the exact tagged source...'
         Invoke-ExternalCommand -ErrorMessage 'Build, test, or pack failed. No packages were published.' -Command {
-            & $buildScript
+            # Older tagged releases define Exec with an undeclared $msgs fallback.
+            # Keep strict mode for this script, but do not impose it on the build script's child scope.
+            Set-StrictMode -Off
+            Push-Location -Path $temporaryWorktree
+            try {
+                & $buildScript
+            }
+            finally {
+                Pop-Location
+            }
         }
 
         $artifactsPath = Join-Path $temporaryWorktree 'artifacts'
-        $contractsPackage = Join-Path $artifactsPath ("AN.MediatR.Contracts.{0}.nupkg" -f $releaseTag.Version)
-        $mainPackage = Join-Path $artifactsPath ("AN.MediatR.{0}.nupkg" -f $releaseTag.Version)
-        $contractsSymbols = Join-Path $artifactsPath ("AN.MediatR.Contracts.{0}.snupkg" -f $releaseTag.Version)
-        $mainSymbols = Join-Path $artifactsPath ("AN.MediatR.{0}.snupkg" -f $releaseTag.Version)
+        if (-not (Test-Path -LiteralPath $artifactsPath -PathType Container)) {
+            throw "The build did not create the artifacts directory: $artifactsPath"
+        }
 
-        Assert-PackageExists -Path $contractsPackage
-        Assert-PackageExists -Path $mainPackage
-        Assert-PackageExists -Path $contractsSymbols
-        Assert-PackageExists -Path $mainSymbols
+        $packageDefinitions = @(
+            'AN.MediatR.Contracts'
+            'AN.MediatR'
+        )
+        $autofacProject = Join-Path $temporaryWorktree 'src\AN.MediatR.Extensions.Autofac.DependencyInjection\AN.MediatR.Extensions.Autofac.DependencyInjection.csproj'
+        if (Test-Path -LiteralPath $autofacProject -PathType Leaf) {
+            $packageDefinitions += 'AN.MediatR.Extensions.Autofac.DependencyInjection'
+        }
+        else {
+            Write-Warning "Release tag '$($releaseTag.Name)' does not contain AN.MediatR.Extensions.Autofac.DependencyInjection. It will be included automatically when publishing a tag that contains the project."
+        }
+
+        $packageArtifacts = @(
+            foreach ($packageId in $packageDefinitions) {
+                Get-PackageArtifacts -ArtifactsPath $artifactsPath -PackageId $packageId
+            }
+        )
+
+        $packageVersions = @($packageArtifacts | Select-Object -ExpandProperty Version -Unique)
+        if ($packageVersions.Count -ne 1) {
+            throw "Package versions calculated by MinVer do not match: $($packageVersions -join ', ')."
+        }
+
+        $packageVersion = $packageVersions[0]
+        if ($packageVersion -ne $releaseTag.Version) {
+            throw "MinVer produced package version '$packageVersion', but release tag '$($releaseTag.Name)' expects '$($releaseTag.Version)'."
+        }
 
         Write-Host 'Generated packages:'
-        Write-Host "  $contractsPackage"
-        Write-Host "  $mainPackage"
-        Write-Host "  $contractsSymbols"
-        Write-Host "  $mainSymbols"
+        foreach ($artifact in $packageArtifacts) {
+            Write-Host "  $($artifact.PackagePath)"
+        }
+        foreach ($artifact in $packageArtifacts) {
+            Write-Host "  $($artifact.SymbolsPath)"
+        }
 
         if (-not $Publish) {
             Write-Host 'Validation completed. No package was published. Re-run with -Publish to copy the packages to the NuGet source.'
@@ -135,10 +271,12 @@ try {
         }
 
         $packagesToPublish = @(
-            $contractsPackage,
-            $mainPackage,
-            $contractsSymbols,
-            $mainSymbols
+            foreach ($artifact in $packageArtifacts) {
+                $artifact.PackagePath
+            }
+            foreach ($artifact in $packageArtifacts) {
+                $artifact.SymbolsPath
+            }
         )
 
         $publicationWasSkipped = $false
@@ -146,9 +284,7 @@ try {
             $packageName = Split-Path -Leaf $package
             if ($PSCmdlet.ShouldProcess($NuGetSource, "Publish $packageName")) {
                 Write-Host "Publishing $packageName..."
-                Invoke-ExternalCommand -ErrorMessage "Failed to publish '$packageName'." -Command {
-                    dotnet nuget push $package --source $NuGetSource --skip-duplicate
-                }
+                Copy-PackageToSource -PackagePath $package -DestinationDirectory $NuGetSource
             }
             else {
                 $publicationWasSkipped = $true
@@ -159,7 +295,7 @@ try {
             Write-Host 'Publication was not completed because one or more publish operations were skipped.'
         }
         else {
-            Write-Host "Release $($releaseTag.Version) was published to $NuGetSource."
+            Write-Host "Release $packageVersion was published to $NuGetSource."
         }
     }
     finally {

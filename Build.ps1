@@ -14,7 +14,7 @@ function Exec
     [CmdletBinding()]
     param(
         [Parameter(Position=0,Mandatory=1)][scriptblock]$cmd,
-        [Parameter(Position=1,Mandatory=0)][string]$errorMessage = ($msgs.error_bad_command -f $cmd)
+        [Parameter(Position=1,Mandatory=0)][string]$errorMessage = "Error executing command: $cmd"
     )
     & $cmd
     if ($lastexitcode -ne 0) {
@@ -22,16 +22,32 @@ function Exec
     }
 }
 
-$artifacts = ".\artifacts"
+$repositoryRoot = $PSScriptRoot
+$artifacts = Join-Path $repositoryRoot "artifacts"
+$solution = Join-Path $repositoryRoot "AN.MediatR.sln"
+$mainProject = Join-Path $repositoryRoot "src\AN.MediatR\AN.MediatR.csproj"
+$contractsProject = Join-Path $repositoryRoot "src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj"
+$autofacProject = Join-Path $repositoryRoot "src\AN.MediatR.Extensions.Autofac.DependencyInjection\AN.MediatR.Extensions.Autofac.DependencyInjection.csproj"
+$projectsToPack = @(
+    $mainProject
+    $contractsProject
+    $autofacProject
+)
 
 if(Test-Path $artifacts) { Remove-Item $artifacts -Force -Recurse }
 
-exec { & dotnet clean -c Release }
+Push-Location $repositoryRoot
+try {
+    exec { & dotnet clean $solution -c Release }
 
-exec { & dotnet build -c Release }
+    exec { & dotnet build $solution -c Release }
 
-exec { & dotnet test -c Release --no-build -l trx --verbosity=normal }
+    exec { & dotnet test $solution -c Release --no-build -l trx --verbosity=normal }
 
-exec { & dotnet pack .\src\AN.MediatR\AN.MediatR.csproj -c Release -o $artifacts --no-build }
-exec { & dotnet pack .\src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj -c Release -o $artifacts --no-build }
-
+    foreach ($project in $projectsToPack) {
+        exec { & dotnet pack $project -c Release -o $artifacts --no-build }
+    }
+}
+finally {
+    Pop-Location
+}

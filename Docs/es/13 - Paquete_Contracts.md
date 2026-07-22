@@ -24,7 +24,7 @@ Y eso es **todo el paquete**. Cinco archivos. Sin lógica — solo marcadores y 
 ```xml
 <PropertyGroup>
   <TargetFramework>netstandard2.0</TargetFramework>
-  <Version>2.0.1</Version>
+  <MinVerTagPrefix>v</MinVerTagPrefix>
   <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   <RootNamespace>MediatR</RootNamespace>
   <!-- SignAssembly, strong-named con AN.MediatR.snk -->
@@ -33,7 +33,7 @@ Y eso es **todo el paquete**. Cinco archivos. Sin lógica — solo marcadores y 
 
 - **Solo netstandard2.0**. Al no tener lógica, un único target es suficiente y lo hace accesible desde cualquier runtime moderno o legacy.
 - **Licencia Apache-2.0**. En AN.MediatR ambos paquetes son Apache-2.0; históricamente el paquete de contratos se separó para que los tipos de request/notification pudieran vivir en librerías solo-contrato sin fricción de licenciamiento. En el upstream v13+ el paquete principal pasó a RPL-1.5 / comercial, haciendo esa separación crítica — AN.MediatR mantiene la misma división por consistencia y para que las librerías solo-contratos sigan siendo ultra-ligeras (sin DI, sin MinVer, grafo de dependencias minúsculo).
-- **Versión fija `2.0.1`** — no guiada por el versionado `MinVer` del paquete principal. Se espera que los contratos sean estables.
+- **Versionado**: `MinVer` con prefijo de tag `v`, igual que los proyectos de los paquetes principal y Autofac.
 - **Namespace `MediatR`** — mismo namespace que la librería principal, así que los consumidores solo escriben `using AN.MediatR;` sin importar qué paquete define un tipo.
 
 ---
@@ -168,16 +168,13 @@ public class LogPingHandler : IRequestHandler<Ping, Unit>   // Unit explícito p
 
 ## Contrato de estabilidad
 
-Como `AN.MediatR.Contracts` es una API pública expuesta a muchas librerías downstream, su versión se fija deliberadamente en `AN.MediatR.csproj`:
+Como `AN.MediatR.Contracts` es una API pública expuesta a muchas librerías downstream, su versión la calcula MinVer a partir del mismo tag de release que el paquete principal:
 
 ```xml
-<PackageReference Include="AN.MediatR.Contracts" Version="[2.0.1, 3.0.0)" />
+<ProjectReference Include="..\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj" />
 ```
 
-- Límite inferior exacto `2.0.1`.
-- Límite superior exclusivo `3.0.0`.
-
-Garantiza que cualquier versión de `MediatR` que referencia estos contratos es compatible con cualquier `2.x`.
+`Publish.ps1` comprueba que las versiones de los paquetes y símbolos generados para los tres proyectos coinciden con el tag antes de copiarlos al feed.
 
 ---
 
