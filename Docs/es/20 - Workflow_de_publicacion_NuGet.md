@@ -1,8 +1,8 @@
-# Workflow de publicación de paquetes NuGet
+﻿# Workflow de publicación de paquetes NuGet
 
 ## Propósito
 
-Este documento describe el proceso operativo para liberar `AN.MediatR` y `AN.MediatR.Contracts` como paquetes NuGet. Cubre el versionado desde Git, validación, empaquetado, publicación y comprobaciones posteriores.
+Este documento describe el proceso operativo para liberar `AN.MediatR`, `AN.MediatR.Contracts` y `AN.MediatR.Extensions.Autofac.DependencyInjection` como paquetes NuGet. Cubre el versionado desde Git, validación, empaquetado, publicación y comprobaciones posteriores.
 
 El repositorio usa [MinVer](https://github.com/adamralph/minver) para derivar versiones de los tags Git. No hay una propiedad `Version` fija en los proyectos actuales: el tag y el historial son la fuente de verdad. La fecha de publicación no define la versión.
 
@@ -14,8 +14,9 @@ El repositorio usa [MinVer](https://github.com/adamralph/minver) para derivar ve
 |---|---|---|
 | `src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj` | `AN.MediatR.Contracts.<versión>.nupkg` | `netstandard2.0` |
 | `src/AN.MediatR/AN.MediatR.csproj` | `AN.MediatR.<versión>.nupkg` | `netstandard2.0`, `net8.0`, `net9.0`, `net10.0` y `net462` en Windows |
+| `src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj` | `AN.MediatR.Extensions.Autofac.DependencyInjection.<versión>.nupkg` | `netstandard2.0` |
 
-Ambos proyectos generan también un paquete de símbolos `.snupkg`. El paquete principal tiene una referencia de proyecto hacia `AN.MediatR.Contracts`; al empaquetarlo debe aparecer una dependencia NuGet hacia la versión publicada de contratos.
+Los tres proyectos generan también un paquete de símbolos `.snupkg`. El paquete principal tiene una referencia de proyecto hacia `AN.MediatR.Contracts`; al empaquetarlo debe aparecer una dependencia NuGet hacia la versión publicada de contratos. Los tags anteriores a la incorporación de Autofac sólo generan y publican los paquetes que existían en ese tag; para publicar la integración se debe crear una nueva release taggeada que la contenga.
 
 ## Estado actual y ajustes necesarios antes de la primera publicación
 
@@ -23,7 +24,7 @@ El repositorio contiene scripts y workflows heredados que son una buena base, pe
 
 | Elemento actual | Riesgo o incoherencia | Ajuste requerido |
 |---|---|---|
-| `Build.ps1` | Correctamente empaqueta los dos proyectos, pero elimina `artifacts/` al iniciar. | Ejecutarlo sólo en un árbol donde se puedan regenerar los artefactos. |
+| `Build.ps1` | Correctamente empaqueta los tres proyectos, pero elimina `artifacts/` al iniciar. | Ejecutarlo sólo en un árbol donde se puedan regenerar los artefactos. |
 | `Push.ps1` | Publica todos los `*.nupkg` en el orden que devuelva el sistema, no sube `*.snupkg` y no usa `--skip-duplicate`. | Publicar contratos antes que el paquete principal; añadir manejo explícito de símbolos y de duplicados o publicar los ficheros de forma manual y ordenada. |
 | CI actual | Se activa sobre `master`, instala sólo SDK 6/8 y publica en un feed MyGet heredado. | Usar la rama principal real (`main`, salvo decisión distinta), SDKs 8/9/10 y ningún feed o secreto ajeno al fork. |
 | Release actual | Se dispara con cualquier tag que tenga dos puntos, mientras MinVer exige prefijo `v`. | Disparar sólo con tags `v*.*.*` o validar estrictamente el formato antes de publicar. |
@@ -55,11 +56,12 @@ El prefijo `v` es necesario porque ambos `.csproj` contienen:
 <MinVerTagPrefix>v</MinVerTagPrefix>
 ```
 
-En el commit que recibe `v2026.1.0`, MinVer produce `2026.1.0`. Un commit posterior sin tag recibe una versión de prerelease calculada por MinVer, no una nueva versión estable. Las versiones exactas se deben comprobar, nunca deducir a ojo, con:
+En el commit que recibe `v2026.1.0`, MinVer produce `2026.1.0` para los tres paquetes. Un commit posterior sin tag recibe una versión de prerelease calculada por MinVer, no una nueva versión estable. Las versiones exactas se deben comprobar, nunca deducir a ojo, con:
 
 ```powershell
 dotnet msbuild src/AN.MediatR/AN.MediatR.csproj -getProperty:PackageVersion
 dotnet msbuild src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -getProperty:PackageVersion
+dotnet msbuild src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -getProperty:PackageVersion
 ```
 
 Para candidatos previos, usar un tag SemVer de prerelease, por ejemplo `v2026.1.0-rc.1`, y publicar primero en un feed de pruebas o como prerelease en NuGet.org. No publicar una versión estable sólo para comprobar el pipeline.
@@ -132,13 +134,14 @@ Puede verificarse el resultado final en un clon temporal o crear el tag localmen
 git tag -a v2026.0.1 -m "Release AN.MediatR 2026.0.1"
 dotnet msbuild src/AN.MediatR/AN.MediatR.csproj -getProperty:PackageVersion
 dotnet msbuild src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -getProperty:PackageVersion
+dotnet msbuild src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -getProperty:PackageVersion
 ```
 
 Ambas consultas deben devolver `2026.0.1`. Si no lo hacen, borrar sólo el tag local recién creado (`git tag -d v2026.0.1`), corregir la configuración y repetir. No enviar el tag hasta pasar la validación.
 
 ### Paso 3 — Restaurar, compilar y probar
 
-Ejecutar el pipeline local de release. `Build.ps1` limpia `artifacts/`, compila la solución, ejecuta los tests y empaqueta ambos proyectos:
+Ejecutar el pipeline local de release. `Build.ps1` limpia `artifacts/`, compila la solución, ejecuta los tests y empaqueta los tres proyectos:
 
 ```powershell
 ./Build.ps1
@@ -152,6 +155,7 @@ dotnet build -c Release
 dotnet test -c Release --no-build -l trx --verbosity=normal
 dotnet pack src/AN.MediatR/AN.MediatR.csproj -c Release -o artifacts --no-build
 dotnet pack src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -o artifacts --no-build
+dotnet pack src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -c Release -o artifacts --no-build
 ```
 
 El build debe ejecutarse en Windows antes de la publicación de producción, ya que sólo allí se compila el target `net462`. Si el workflow de release usa otro sistema operativo, esa variante no queda validada.
@@ -171,11 +175,13 @@ AN.MediatR.Contracts.2026.0.1.nupkg
 AN.MediatR.Contracts.2026.0.1.snupkg
 AN.MediatR.2026.0.1.nupkg
 AN.MediatR.2026.0.1.snupkg
+AN.MediatR.Extensions.Autofac.DependencyInjection.2026.0.1.nupkg
+AN.MediatR.Extensions.Autofac.DependencyInjection.2026.0.1.snupkg
 ```
 
 Validar antes de publicar:
 
-1. Los cuatro nombres usan la misma versión y los IDs `AN.*`.
+1. Los seis nombres usan la misma versión y los IDs `AN.*`.
 2. Los `.nupkg` incluyen README, icono, licencia/metadatos aprobados, XML de documentación y los TFMs esperados.
 3. El `.nuspec` de `AN.MediatR` declara una dependencia a `AN.MediatR.Contracts` de la versión correcta, no a `MediatR.Contracts`.
 4. No aparecen dependencias de activación de licencia como `Microsoft.IdentityModel.JsonWebTokens`.
@@ -191,7 +197,8 @@ Publicar siempre en este orden:
 
 1. `AN.MediatR.Contracts`.
 2. `AN.MediatR`.
-3. Los símbolos `.snupkg` de ambos paquetes, si el feed los admite.
+3. `AN.MediatR.Extensions.Autofac.DependencyInjection`.
+4. Los símbolos `.snupkg` de los tres paquetes, si el feed los admite.
 
 El orden evita una ventana en la que el paquete principal esté disponible y su versión de contratos todavía no pueda restaurarse.
 
@@ -229,13 +236,15 @@ $env:NUGET_API_KEY = "<API_KEY_DE_NUGET>"
 
 dotnet nuget push .\artifacts\AN.MediatR.Contracts.2026.0.1.nupkg --source $env:NUGET_URL --api-key $env:NUGET_API_KEY --skip-duplicate
 dotnet nuget push .\artifacts\AN.MediatR.2026.0.1.nupkg --source $env:NUGET_URL --api-key $env:NUGET_API_KEY --skip-duplicate
+dotnet nuget push .\artifacts\AN.MediatR.Extensions.Autofac.DependencyInjection.2026.0.1.nupkg --source $env:NUGET_URL --api-key $env:NUGET_API_KEY --skip-duplicate
 dotnet nuget push .\artifacts\AN.MediatR.Contracts.2026.0.1.snupkg --source $env:NUGET_URL --api-key $env:NUGET_API_KEY --skip-duplicate
 dotnet nuget push .\artifacts\AN.MediatR.2026.0.1.snupkg --source $env:NUGET_URL --api-key $env:NUGET_API_KEY --skip-duplicate
+dotnet nuget push .\artifacts\AN.MediatR.Extensions.Autofac.DependencyInjection.2026.0.1.snupkg --source $env:NUGET_URL --api-key $env:NUGET_API_KEY --skip-duplicate
 ```
 
 Usar `--skip-duplicate` permite reintentar una ejecución interrumpida, pero no es una forma de sustituir un paquete existente. Si una versión ya existe, comparar el hash y detenerse si no corresponde al artefacto de la release actual.
 
-`Push.ps1` se puede usar tras modificarlo para reflejar este orden y los símbolos. En su estado actual no garantiza ese orden ni sube `.snupkg`; no debe ser el único mecanismo de una primera publicación estable.
+`Push.ps1` se puede usar tras modificarlo para reflejar este orden y los símbolos. `Publish.ps1` valida y copia los seis artefactos desde el tag estable, pero por defecto sólo valida y requiere `-Publish` para copiar a la carpeta UNC.
 
 ### Paso 8 — Verificar la publicación
 
@@ -274,10 +283,11 @@ Si no coincide, la ejecución debe terminar antes del paso de `nuget push`.
 
 | Script | Uso correcto | Limitaciones actuales |
 |---|---|---|
-| `Build.ps1` | Pipeline local completo: limpiar, compilar, probar y empaquetar ambos paquetes. | Borra `artifacts/`; no inspecciona contenido ni publica símbolos. |
+| `Build.ps1` | Pipeline local completo: limpiar, compilar, probar y empaquetar los tres paquetes. | Borra `artifacts/`; no inspecciona contenido ni publica símbolos. |
 | `BuildContracts.ps1` | Construir y empaquetar sólo contratos, con `ContinuousIntegrationBuild=true`. | No sustituye al build completo ni valida el paquete principal. |
 | `Push.ps1` | Base para un push autenticado usando `NUGET_URL` y `NUGET_API_KEY`. | Sin orden de dependencias, sin `.snupkg`, sin `--skip-duplicate` y con mensaje de error heredado que debe revisarse. |
-| `Publish.ps1` | Release segura desde el último tag estable alcanzable: crea un worktree temporal en el tag, ejecuta `Build.ps1`, valida los cuatro paquetes y los publica en orden. | Por defecto sólo valida. Requiere `-Publish` y una ruta UNC real; el valor por defecto `\\(server_ip)\nuget` es un marcador que debe sustituirse. |
+| `Publish.ps1` | Release segura desde el último tag estable alcanzable: con `-Publish` comprueba primero que la ruta UNC está accesible, crea un worktree temporal en el tag, ejecuta `Build.ps1`, valida los seis artefactos, comprueba que MinVer coincide con el tag y los copia en orden. | Por defecto sólo valida. Requiere `-Publish` y una ruta UNC real; el valor por defecto `\\<server>\nuget` es un marcador que debe sustituirse. |
+| `devserver-publish.ps1` | Wrapper para publicar en el recurso compartido NuGet de un servidor. | Requiere `-Server` con una dirección IPv4 y construye `\\<server>\nuget`. |
 
 La mejora mínima recomendada para `Push.ps1` es recibir una versión o rutas explícitas, validar que existen los cuatro artefactos esperados, subir contratos antes que el principal y tratar los símbolos por separado. Esa modificación debe acompañarse de tests o una ejecución contra un feed de pruebas.
 
@@ -285,26 +295,34 @@ Para un feed de carpeta compartida, el uso previsto del nuevo script es:
 
 ```powershell
 # Validación completa del último tag, sin publicar.
-.\Publish.ps1 -NuGetSource "\\10.0.0.10\nuget"
+.\Publish.ps1 -NuGetSource "\\<server>\nuget"
 
-# Publicación tras revisar la validación. -Confirm:$false es útil en un runner automatizado.
-.\Publish.ps1 -NuGetSource "\\10.0.0.10\nuget" -Publish -Confirm:$false
+# Publicación automática en el recurso compartido NuGet del servidor indicado.
+.\devserver-publish.ps1 -Server <IPv4-address>
+
+# Validar el wrapper sin copiar paquetes.
+.\devserver-publish.ps1 -Server <IPv4-address> -WhatIf
 ```
+
+Para una carpeta compartida, `Publish.ps1` copia directamente los seis artefactos
+(`.nupkg` y `.snupkg`) en la ruta UNC. Si un archivo con el mismo nombre ya existe,
+lo omite cuando su hash coincide o cuando el contenido interno del paquete es equivalente
+y sólo difieren metadatos del archivo ZIP; nunca sobrescribe un paquete diferente.
 
 ## 6. Lista de control de aprobación
 
 Antes de pulsar la aprobación del entorno de producción, una persona distinta de quien preparó el tag debería comprobar:
 
 - [ ] El tag es anotado, tiene formato `vMAJOR.MINOR.PATCH` y apunta al commit revisado.
-- [ ] MinVer produce la versión prevista para los dos proyectos.
+- [ ] MinVer produce la versión prevista para los tres proyectos.
 - [ ] El árbol de origen y el commit de release están identificados en las notas.
 - [ ] Build, tests y pruebas de integración DI han pasado en Windows.
-- [ ] Se han inspeccionado los dos `.nupkg` y sus dos `.snupkg`.
+- [ ] Se han inspeccionado los tres `.nupkg` y sus tres `.snupkg`.
 - [ ] `AN.MediatR` depende de `AN.MediatR.Contracts`, no de paquetes `MediatR` upstream.
 - [ ] No hay runtime licensing, claves, JWT ni dependencias prohibidas en los paquetes.
 - [ ] La declaración legal y los metadatos del paquete han sido aprobados.
 - [ ] La API key tiene el mínimo alcance y procede del entorno de producción propio.
-- [ ] Se publicará Contracts antes que el paquete principal.
+- [ ] Se publicarán Contracts, el paquete principal y la integración Autofac en ese orden.
 - [ ] Existe un plan para verificar instalación desde NuGet.org y publicar las notas de release.
 
 ## 7. Recuperación ante fallos

@@ -10,7 +10,7 @@ AN.MediatR is organized into three top-level folders inside the repository:
 
 | Folder | Contents |
 |--------|----------|
-| `src/` | The two NuGet packages: `AN.MediatR` and `AN.MediatR.Contracts` |
+| `src/` | The three NuGet packages: `AN.MediatR`, `AN.MediatR.Contracts`, and `AN.MediatR.Extensions.Autofac.DependencyInjection` |
 | `samples/` | Ten sample projects showing integration patterns |
 | `test/` | Two test projects (unit/DI, benchmarks) |
 
@@ -20,7 +20,7 @@ AN.MediatR is organized into three top-level folders inside the repository:
 
 ### `src/AN.MediatR/AN.MediatR.csproj`
 
-The main library. Produces the `MediatR` NuGet package.
+The main library. Produces the `AN.MediatR` NuGet package.
 
 - **Target frameworks**: `netstandard2.0;net8.0;net9.0;net10.0` (plus `net462` on Windows).
 - **Nullable**: enabled.
@@ -30,7 +30,7 @@ The main library. Produces the `MediatR` NuGet package.
 - **Versioning**: `MinVer` with tag prefix `v` (e.g. `v12.5.0`).
 - **Dependencies**:
   - `IsExternalInit` (dev-only polyfill) — enables `init`-only properties on `netstandard2.0`.
-  - `AN.MediatR.Contracts` (version `[2.0.1, 3.0.0)`).
+  - `AN.MediatR.Contracts` (version calculated by MinVer from the release tag).
   - `Microsoft.Bcl.AsyncInterfaces` v10.0.0 (only on `netstandard2.0`) — provides `IAsyncEnumerable<T>`.
   - `Microsoft.Extensions.DependencyInjection.Abstractions` v10.0.0.
   - `Microsoft.SourceLink.GitHub` 8.0.0 (dev-only).
@@ -85,13 +85,22 @@ src/AN.MediatR/
 
 > Note: unlike the v13+ upstream, this tree has **no `Licensing/` folder**, no `license.txt` embedded resource, no `BuildInfo.cs`, no `EmbedBuildDate` MSBuild target. There is no runtime licensing subsystem.
 
+### `src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj`
+
+Autofac integration for `AN.MediatR`. It references the local `AN.MediatR` project rather than the upstream `MediatR` package.
+
+- **Target framework**: `netstandard2.0`.
+- **Dependencies**: `Autofac` 9.1.0 and `AN.MediatR`.
+- **Package**: `AN.MediatR.Extensions.Autofac.DependencyInjection`.
+- **Versioning**: `MinVer` with tag prefix `v`.
+
 ### `src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj`
 
 A minimal, dependency-free package containing just the contract interfaces.
 
 - **Target framework**: `netstandard2.0` only.
 - **License**: `Apache-2.0` (`PackageLicenseExpression`).
-- **Version**: fixed at `2.0.1` (not driven by `MinVer`).
+- **Versioning**: `MinVer` with tag prefix `v`, consistent with the other package projects.
 - **Dependencies**: none beyond SourceLink (dev-only).
 
 Contents:
@@ -167,10 +176,12 @@ The full xUnit test suite. Located at `test/AN.MediatR.Tests/`. Covers:
 dotnet clean -c Release
 dotnet build -c Release
 dotnet test  -c Release --no-build -l trx --verbosity=normal
-dotnet pack  .\src\MediatR\MediatR.csproj -c Release -o .\artifacts --no-build
+dotnet pack  .\src\AN.MediatR\AN.MediatR.csproj -c Release -o .\artifacts --no-build
+dotnet pack  .\src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj -c Release -o .\artifacts --no-build
+dotnet pack  .\src\AN.MediatR.Extensions.Autofac.DependencyInjection\AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -c Release -o .\artifacts --no-build
 ```
 
-Clean + build + test + pack of the main `AN.MediatR` package. Output artifacts go to `./artifacts`.
+Clean + build + test + pack of all three `AN.*` packages. Output artifacts go to `./artifacts`.
 
 ### `BuildContracts.ps1`
 

@@ -1,4 +1,4 @@
-# Build, Test & Publish
+﻿# Build, Test & Publish
 
 This chapter documents the build pipeline, test projects, and NuGet publishing flow for AN.MediatR.
 
@@ -12,13 +12,16 @@ Source: [Build.ps1](../../Build.ps1).
 # Taken from psake
 function Exec { ... }  # helper that throws when $lastexitcode != 0
 
-$artifacts = ".\artifacts"
-if (Test-Path $artifacts) { Remove-Item $artifacts -Force -Recurse }
+$repositoryRoot = $PSScriptRoot
+$artifacts = Join-Path $repositoryRoot "artifacts"
+$solution = Join-Path $repositoryRoot "AN.MediatR.sln"
 
-exec { & dotnet clean -c Release }
-exec { & dotnet build -c Release }
-exec { & dotnet test  -c Release --no-build -l trx --verbosity=normal }
-exec { & dotnet pack  .\src\MediatR\MediatR.csproj -c Release -o $artifacts --no-build }
+exec { & dotnet clean $solution -c Release }
+exec { & dotnet build $solution -c Release }
+exec { & dotnet test  $solution -c Release --no-build -l trx --verbosity=normal }
+exec { & dotnet pack  .\src\AN.MediatR\AN.MediatR.csproj -c Release -o $artifacts --no-build }
+exec { & dotnet pack  .\src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj -c Release -o $artifacts --no-build }
+exec { & dotnet pack  .\src\AN.MediatR.Extensions.Autofac.DependencyInjection\AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -c Release -o $artifacts --no-build }
 ```
 
 What it does:
@@ -27,13 +30,13 @@ What it does:
 2. `dotnet clean -c Release` — clears bin/obj.
 3. `dotnet build -c Release` — restores and compiles everything in the solution.
 4. `dotnet test -c Release --no-build -l trx` — runs all test projects, emitting TRX results for CI integration.
-5. `dotnet pack src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build` — packs only the main `AN.MediatR` package.
+5. `dotnet pack` — packs `AN.MediatR`, `AN.MediatR.Contracts`, and `AN.MediatR.Extensions.Autofac.DependencyInjection`.
 
 The `exec` helper is a tiny psake-style wrapper that throws a .NET exception when the previous `dotnet` command fails.
 
-Output: `AN.MediatR.<version>.nupkg` and `AN.MediatR.Contracts.<version>.nupkg` (plus their `.snupkg` symbols) in `artifacts/`.
+Output: the three `AN.*.<version>.nupkg` packages and their `.snupkg` symbol packages in `artifacts/`. Release tags created before the Autofac integration contain only the packages that existed in that tag; create a new release tag containing the integration to publish it.
 
-> Note: `Build.ps1` packs **both** `AN.MediatR` and `AN.MediatR.Contracts`. `BuildContracts.ps1` is kept as a convenience for packing only the contracts package independently.
+> Note: `Build.ps1` packs all three `AN.*` packages. `BuildContracts.ps1` is kept as a convenience for packing only the contracts package independently.
 
 ---
 
@@ -48,7 +51,7 @@ dotnet pack  ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -
 ```
 
 - `ContinuousIntegrationBuild=true` enables deterministic builds — important for `Microsoft.SourceLink.GitHub` to embed reproducible commit metadata.
-- Contracts are released independently (version `2.0.1` hardcoded in the csproj), not tied to the main package's MinVer versioning.
+- `BuildContracts.ps1` can pack contracts independently, but its version is also calculated by MinVer from the Git tag.
 
 ---
 
@@ -73,7 +76,7 @@ For internal feeds (Azure Artifacts, GitHub Packages, MyGet), override `NUGET_UR
 
 ## MinVer versioning
 
-Source: [src/AN.MediatR/AN.MediatR.csproj](../../src/AN.MediatR/AN.MediatR.csproj) — `<PackageReference Include="MinVer" ... />` + `<MinVerTagPrefix>v</MinVerTagPrefix>`.
+Source: the `AN.MediatR`, `AN.MediatR.Contracts`, and `AN.MediatR.Extensions.Autofac.DependencyInjection` project files — each uses `<PackageReference Include="MinVer" ... />` + `<MinVerTagPrefix>v</MinVerTagPrefix>`.
 
 MinVer computes the NuGet package version from git tags:
 
@@ -214,9 +217,10 @@ dotnet clean -c Release
 dotnet build -c Release
 dotnet test -c Release --no-build -l trx --verbosity=normal
 
-# 3. Pack both packages
+# 3. Pack all three packages
 dotnet pack ./src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build
 dotnet pack ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -o ./artifacts -p:ContinuousIntegrationBuild=true
+dotnet pack ./src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -c Release -o ./artifacts --no-build
 
 # 4. (Optional) Push
 $env:NUGET_URL = "https://api.nuget.org/v3/index.json"

@@ -8,7 +8,7 @@ if ([string]::IsNullOrEmpty($Env:NUGET_API_KEY)) {
         Write-Host "$($scriptName): Pushing $($_.Name)"
         dotnet nuget push $_ --source $Env:NUGET_URL --api-key $Env:NUGET_API_KEY
         if ($lastexitcode -ne 0) {
-            throw ("Exec: " + $errorMessage)
+            throw "${scriptName}: Failed to push $($_.Name) (exit code $lastexitcode)."
         }
     }
 }

@@ -12,13 +12,16 @@ Fuente: [Build.ps1](../../Build.ps1).
 # Tomado de psake
 function Exec { ... }  # helper que lanza excepción cuando $lastexitcode != 0
 
-$artifacts = ".\artifacts"
-if (Test-Path $artifacts) { Remove-Item $artifacts -Force -Recurse }
+$repositoryRoot = $PSScriptRoot
+$artifacts = Join-Path $repositoryRoot "artifacts"
+$solution = Join-Path $repositoryRoot "AN.MediatR.sln"
 
-exec { & dotnet clean -c Release }
-exec { & dotnet build -c Release }
-exec { & dotnet test  -c Release --no-build -l trx --verbosity=normal }
-exec { & dotnet pack  .\src\MediatR\MediatR.csproj -c Release -o $artifacts --no-build }
+exec { & dotnet clean $solution -c Release }
+exec { & dotnet build $solution -c Release }
+exec { & dotnet test  $solution -c Release --no-build -l trx --verbosity=normal }
+exec { & dotnet pack  .\src\AN.MediatR\AN.MediatR.csproj -c Release -o $artifacts --no-build }
+exec { & dotnet pack  .\src\AN.MediatR.Contracts\AN.MediatR.Contracts.csproj -c Release -o $artifacts --no-build }
+exec { & dotnet pack  .\src\AN.MediatR.Extensions.Autofac.DependencyInjection\AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -c Release -o $artifacts --no-build }
 ```
 
 Lo que hace:
@@ -27,11 +30,11 @@ Lo que hace:
 2. `dotnet clean -c Release` — limpia bin/obj.
 3. `dotnet build -c Release` — restaura y compila todo.
 4. `dotnet test -c Release --no-build -l trx` — ejecuta todos los tests, produciendo TRX para integración CI.
-5. `dotnet pack src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build` — empaqueta solo el paquete principal `AN.MediatR`.
+5. `dotnet pack` — empaqueta `AN.MediatR`, `AN.MediatR.Contracts` y `AN.MediatR.Extensions.Autofac.DependencyInjection`.
 
-Salida: `AN.MediatR.<version>.nupkg` y `AN.MediatR.Contracts.<version>.nupkg` (más sus `.snupkg` de símbolos) en `artifacts/`.
+Salida: los tres paquetes `AN.*.<version>.nupkg` y sus paquetes de símbolos `.snupkg` en `artifacts/`.
 
-> Nota: `Build.ps1` empaqueta **ambos** `AN.MediatR` y `AN.MediatR.Contracts`. `BuildContracts.ps1` se mantiene como utilidad para empaquetar solo el paquete de contratos por separado.
+> Nota: `Build.ps1` empaqueta los tres paquetes `AN.*`. `BuildContracts.ps1` se mantiene como utilidad para empaquetar solo el paquete de contratos por separado.
 
 ---
 
@@ -46,7 +49,7 @@ dotnet pack  ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -
 ```
 
 - `ContinuousIntegrationBuild=true` habilita builds deterministas — importante para que `Microsoft.SourceLink.GitHub` embeba metadatos de commit reproducibles.
-- Los contratos se publican de forma independiente (versión `2.0.1` hardcodeada en el csproj), no atados al versionado MinVer del paquete principal.
+- `BuildContracts.ps1` puede empaquetar contratos por separado, pero su versión también la calcula MinVer a partir del tag Git.
 
 ---
 
@@ -68,8 +71,7 @@ if ($env:NUGET_API_KEY) {
 ---
 
 ## Versionado con MinVer
-
-MinVer calcula la versión del paquete a partir de tags git:
+Los tres proyectos de paquete usan MinVer para calcular su versión a partir de tags git:
 
 - El último tag que casa `v*` (p. ej. `v12.5.0`) es la versión base.
 - Si el commit actual está **taggeado**, la versión es exactamente el tag.
@@ -208,9 +210,10 @@ dotnet clean -c Release
 dotnet build -c Release
 dotnet test -c Release --no-build -l trx --verbosity=normal
 
-# 3. Empaquetar ambos
+# 3. Empaquetar los tres paquetes
 dotnet pack ./src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build
 dotnet pack ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -o ./artifacts -p:ContinuousIntegrationBuild=true
+dotnet pack ./src/AN.MediatR.Extensions.Autofac.DependencyInjection/AN.MediatR.Extensions.Autofac.DependencyInjection.csproj -c Release -o ./artifacts --no-build
 
 # 4. (Opcional) Push
 $env:NUGET_URL = "https://api.nuget.org/v3/index.json"
