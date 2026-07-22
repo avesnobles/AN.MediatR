@@ -27,11 +27,11 @@ Lo que hace:
 2. `dotnet clean -c Release` — limpia bin/obj.
 3. `dotnet build -c Release` — restaura y compila todo.
 4. `dotnet test -c Release --no-build -l trx` — ejecuta todos los tests, produciendo TRX para integración CI.
-5. `dotnet pack src/MediatR/MediatR.csproj -c Release -o ./artifacts --no-build` — empaqueta solo el paquete principal `MediatR`.
+5. `dotnet pack src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build` — empaqueta solo el paquete principal `AN.MediatR`.
 
-Salida: un único `MediatR.<version>.nupkg` (más su `.snupkg` de símbolos) en `artifacts/`.
+Salida: `AN.MediatR.<version>.nupkg` y `AN.MediatR.Contracts.<version>.nupkg` (más sus `.snupkg` de símbolos) en `artifacts/`.
 
-> Nota: `Build.ps1` **no** empaqueta `MediatR.Contracts` — eso es trabajo de `BuildContracts.ps1`.
+> Nota: `Build.ps1` empaqueta **ambos** `AN.MediatR` y `AN.MediatR.Contracts`. `BuildContracts.ps1` se mantiene como utilidad para empaquetar solo el paquete de contratos por separado.
 
 ---
 
@@ -40,9 +40,9 @@ Salida: un único `MediatR.<version>.nupkg` (más su `.snupkg` de símbolos) en 
 Build y pack del paquete de contratos por separado. Forma típica:
 
 ```powershell
-dotnet clean ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release
-dotnet build ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release -p:ContinuousIntegrationBuild=true
-dotnet pack  ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release -o ./artifacts
+dotnet clean ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release
+dotnet build ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -p:ContinuousIntegrationBuild=true
+dotnet pack  ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -o ./artifacts
 ```
 
 - `ContinuousIntegrationBuild=true` habilita builds deterministas — importante para que `Microsoft.SourceLink.GitHub` embeba metadatos de commit reproducibles.
@@ -95,7 +95,7 @@ Para cortar una release:
 
 ## Resumen de tests
 
-### `test/MediatR.Tests`
+### `test/AN.MediatR.Tests`
 
 Suite xUnit completa. Cubre:
 
@@ -107,11 +107,11 @@ Suite xUnit completa. Cubre:
 - Dispatch de stream requests y composición de stream pipeline behaviors.
 - Casos extremos de `HandlersOrderer` / `ObjectDetails`.
 - Semántica de `Unit.Value`, `Unit.Task`, comparación y equality.
-- Registro y escaneo DI (dentro de `test/MediatR.Tests/MicrosoftExtensionsDI/`): escaneo, filtro `TypeEvaluator`, `AutoRegisterRequestProcessors`, límites de registro, idempotencia ante duplicados, accesibilidad.
+- Registro y escaneo DI (dentro de `test/AN.MediatR.Tests/MicrosoftExtensionsDI/`): escaneo, filtro `TypeEvaluator`, `AutoRegisterRequestProcessors`, límites de registro, idempotencia ante duplicados, accesibilidad.
 
 > En v12.5 no hay proyecto separado `MediatR.DependencyInjectionTests` — todo vive en `MediatR.Tests`.
 
-### `test/MediatR.Benchmarks`
+### `test/AN.MediatR.Benchmarks`
 
 Microbenchmarks con `BenchmarkDotNet`:
 
@@ -124,21 +124,21 @@ Microbenchmarks con `BenchmarkDotNet`:
 Ejecuta con:
 
 ```bash
-dotnet run -c Release --project test/MediatR.Benchmarks
+dotnet run -c Release --project test/AN.MediatR.Benchmarks
 ```
 
 ---
 
 ## Firma de ensamblados
 
-Ambos proyectos están **strong-named** con `MediatR.snk`:
+Ambos proyectos están **strong-named** con `AN.MediatR.snk`:
 
 ```xml
 <SignAssembly>true</SignAssembly>
-<AssemblyOriginatorKeyFile>..\..\MediatR.snk</AssemblyOriginatorKeyFile>
+<AssemblyOriginatorKeyFile>..\..\AN.MediatR.snk</AssemblyOriginatorKeyFile>
 ```
 
-En v12.5 **no hay `InternalsVisibleTo`** en `MediatR.csproj` — el proyecto de tests no necesita acceso a tipos internos.
+En v12.5 **no hay `InternalsVisibleTo`** en `AN.MediatR.csproj` — el proyecto de tests no necesita acceso a tipos internos.
 
 ---
 
@@ -158,7 +158,7 @@ Variables de entorno usadas por `Push.ps1`:
 
 ## Matriz de frameworks destino
 
-`MediatR` produce binarios para dos TFMs:
+`AN.MediatR` produce binarios para dos TFMs:
 
 | TFM | Notas |
 |-----|-------|
@@ -166,9 +166,9 @@ Variables de entorno usadas por `Push.ps1`:
 | `net8.0` | LTS actual. |
 | `net9.0` | STS actual. |
 | `net10.0` | Próxima LTS — soportado en cuanto el SDK esté disponible. |
-| `net462` | .NET Framework 4.6.2, solo producido en builds Windows (condicional en `MediatR.csproj`). |
+| `net462` | .NET Framework 4.6.2, solo producido en builds Windows (condicional en `AN.MediatR.csproj`). |
 
-`MediatR.Contracts` apunta solo a `netstandard2.0`.
+`AN.MediatR.Contracts` apunta solo a `netstandard2.0`.
 
 ### Polyfills
 
@@ -209,8 +209,8 @@ dotnet build -c Release
 dotnet test -c Release --no-build -l trx --verbosity=normal
 
 # 3. Empaquetar ambos
-dotnet pack ./src/MediatR/MediatR.csproj -c Release -o ./artifacts --no-build
-dotnet pack ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release -o ./artifacts -p:ContinuousIntegrationBuild=true
+dotnet pack ./src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build
+dotnet pack ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -o ./artifacts -p:ContinuousIntegrationBuild=true
 
 # 4. (Opcional) Push
 $env:NUGET_URL = "https://api.nuget.org/v3/index.json"

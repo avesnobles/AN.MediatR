@@ -1,15 +1,15 @@
 # Paquete Contracts
 
-`MediatR.Contracts` es un paquete NuGet separado, sin dependencias, que contiene solo las interfaces marcador que necesita cada tipo request / notification / stream-request. Este capítulo explica qué contiene, por qué está separado y cómo `TypeForwardings.cs` lo mantiene compatible binariamente.
+`AN.MediatR.Contracts` es un paquete NuGet separado, sin dependencias, que contiene solo las interfaces marcador que necesita cada tipo request / notification / stream-request. Este capítulo explica qué contiene, por qué está separado y cómo `TypeForwardings.cs` lo mantiene compatible binariamente.
 
 ---
 
 ## Qué hay dentro
 
-Fuente: [src/MediatR.Contracts/](../../src/MediatR.Contracts/).
+Fuente: [src/AN.MediatR.Contracts/](../../src/AN.MediatR.Contracts/).
 
 ```
-src/MediatR.Contracts/
+src/AN.MediatR.Contracts/
 ├── INotification.cs      # public interface INotification { }
 ├── IRequest.cs           # IBaseRequest, IRequest, IRequest<TResponse>
 ├── IStreamRequest.cs     # public interface IStreamRequest<out TResponse> { }
@@ -27,14 +27,14 @@ Y eso es **todo el paquete**. Cinco archivos. Sin lógica — solo marcadores y 
   <Version>2.0.1</Version>
   <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   <RootNamespace>MediatR</RootNamespace>
-  <!-- SignAssembly, strong-named con MediatR.snk -->
+  <!-- SignAssembly, strong-named con AN.MediatR.snk -->
 </PropertyGroup>
 ```
 
 - **Solo netstandard2.0**. Al no tener lógica, un único target es suficiente y lo hace accesible desde cualquier runtime moderno o legacy.
 - **Licencia Apache-2.0**. En AN.MediatR ambos paquetes son Apache-2.0; históricamente el paquete de contratos se separó para que los tipos de request/notification pudieran vivir en librerías solo-contrato sin fricción de licenciamiento. En el upstream v13+ el paquete principal pasó a RPL-1.5 / comercial, haciendo esa separación crítica — AN.MediatR mantiene la misma división por consistencia y para que las librerías solo-contratos sigan siendo ultra-ligeras (sin DI, sin MinVer, grafo de dependencias minúsculo).
 - **Versión fija `2.0.1`** — no guiada por el versionado `MinVer` del paquete principal. Se espera que los contratos sean estables.
-- **Namespace `MediatR`** — mismo namespace que la librería principal, así que los consumidores solo escriben `using MediatR;` sin importar qué paquete define un tipo.
+- **Namespace `MediatR`** — mismo namespace que la librería principal, así que los consumidores solo escriben `using AN.MediatR;` sin importar qué paquete define un tipo.
 
 ---
 
@@ -42,7 +42,7 @@ Y eso es **todo el paquete**. Cinco archivos. Sin lógica — solo marcadores y 
 
 ### 1. Grafo de dependencias más ligero para proyectos solo-contrato
 
-`MediatR.Contracts` tiene **cero** dependencias en runtime; `MediatR` depende de `MediatR.Contracts` más `Microsoft.Extensions.DependencyInjection.Abstractions`. Las librerías que solo necesitan declarar tipos `IRequest` / `INotification` (contratos API, contratos gRPC, clientes Blazor WASM) pueden referenciar el paquete pequeño y distribuir menos ensamblados transitivos.
+`AN.MediatR.Contracts` tiene **cero** dependencias en runtime; `AN.MediatR` depende de `AN.MediatR.Contracts` más `Microsoft.Extensions.DependencyInjection.Abstractions`. Las librerías que solo necesitan declarar tipos `IRequest` / `INotification` (contratos API, contratos gRPC, clientes Blazor WASM) pueden referenciar el paquete pequeño y distribuir menos ensamblados transitivos.
 
 ### 2. Proyectos de contratos de API
 
@@ -63,21 +63,21 @@ Del README:
 > - gRPC contracts
 > - Blazor
 
-Una app Blazor WASM suele querer compartir DTOs con el servidor pero no hostea un mediator. Llevarse solo `MediatR.Contracts` mantiene el payload WASM mínimo.
+Una app Blazor WASM suele querer compartir DTOs con el servidor pero no hostea un mediator. Llevarse solo `AN.MediatR.Contracts` mantiene el payload WASM mínimo.
 
 ### 4. Separación limpia de responsabilidades
 
-Marcadores + modelo de datos en `MediatR.Contracts`. Mecánica de dispatch + pipeline + DI + licenciamiento en `MediatR`. La división sigue la costura natural.
+Marcadores + modelo de datos en `AN.MediatR.Contracts`. Mecánica de dispatch + pipeline + DI + licenciamiento en `MediatR`. La división sigue la costura natural.
 
 ---
 
 ## Cómo coexisten ambos paquetes: `TypeForwardings`
 
-Fuente: [src/MediatR/TypeForwardings.cs](../../src/MediatR/TypeForwardings.cs).
+Fuente: [src/AN.MediatR/TypeForwardings.cs](../../src/AN.MediatR/TypeForwardings.cs).
 
 ```csharp
 using System.Runtime.CompilerServices;
-using MediatR;
+using AN.MediatR;
 
 [assembly: TypeForwardedTo(typeof(IBaseRequest))]
 [assembly: TypeForwardedTo(typeof(IRequest<>))]
@@ -86,7 +86,7 @@ using MediatR;
 [assembly: TypeForwardedTo(typeof(Unit))]
 ```
 
-`TypeForwardedTo` le dice al resolver de tipos CLR: *"si alguien busca `MediatR.IRequest` en el ensamblado `MediatR`, redirígelo a la definición real en `MediatR.Contracts`."*
+`TypeForwardedTo` le dice al resolver de tipos CLR: *"si alguien busca `MediatR.IRequest` en el ensamblado `MediatR`, redirígelo a la definición real en `AN.MediatR.Contracts`."*
 
 ### Por qué importa
 
@@ -95,7 +95,7 @@ Sin type forwarding tendrías dos problemas:
 1. **Definiciones duplicadas**. Si `MediatR.IRequest` existiera tanto en `MediatR.Contracts.dll` como en `MediatR.dll`, cualquier código que referencie ambos obtendría errores de ambigüedad. Peor: el CLR los trataría como dos tipos distintos aunque tengan el mismo namespace y nombre.
 2. **Ruptura de compatibilidad binaria**. Consumidores compilados contra una versión antigua de `MediatR` que definía `IRequest` localmente romperían al actualizar a una versión que lo movió a un ensamblado separado.
 
-Type forwarding soluciona ambos: las definiciones viven físicamente en un solo sitio (`MediatR.Contracts`) y el ensamblado `MediatR` anuncia "yo sigo proveyendo esos tipos — solo tienes que pedírmelos y te redirijo".
+Type forwarding soluciona ambos: las definiciones viven físicamente en un solo sitio (`AN.MediatR.Contracts`) y el ensamblado `MediatR` anuncia "yo sigo proveyendo esos tipos — solo tienes que pedírmelos y te redirijo".
 
 Esto significa:
 
@@ -108,7 +108,7 @@ Esto significa:
 
 El tipo de valor `Unit` es el miembro más sustancial del paquete de contratos.
 
-Fuente: [src/MediatR.Contracts/Unit.cs](../../src/MediatR.Contracts/Unit.cs).
+Fuente: [src/AN.MediatR.Contracts/Unit.cs](../../src/AN.MediatR.Contracts/Unit.cs).
 
 ```csharp
 public readonly struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
@@ -168,10 +168,10 @@ public class LogPingHandler : IRequestHandler<Ping, Unit>   // Unit explícito p
 
 ## Contrato de estabilidad
 
-Como `MediatR.Contracts` es una API pública expuesta a muchas librerías downstream, su versión se fija deliberadamente en `MediatR.csproj`:
+Como `AN.MediatR.Contracts` es una API pública expuesta a muchas librerías downstream, su versión se fija deliberadamente en `AN.MediatR.csproj`:
 
 ```xml
-<PackageReference Include="MediatR.Contracts" Version="[2.0.1, 3.0.0)" />
+<PackageReference Include="AN.MediatR.Contracts" Version="[2.0.1, 3.0.0)" />
 ```
 
 - Límite inferior exacto `2.0.1`.
@@ -186,13 +186,13 @@ Garantiza que cualquier versión de `MediatR` que referencia estos contratos es 
 | Escenario | Depende de |
 |-----------|------------|
 | Alojas el mediator (servidor, worker, app de escritorio) | `MediatR` |
-| Defines tipos de request/notification en una librería de solo contratos | `MediatR.Contracts` |
-| Escribes un cliente Blazor WASM que solo hace llamadas HTTP con requests tipados | `MediatR.Contracts` |
-| Escribes un proyecto de contratos gRPC | `MediatR.Contracts` |
+| Defines tipos de request/notification en una librería de solo contratos | `AN.MediatR.Contracts` |
+| Escribes un cliente Blazor WASM que solo hace llamadas HTTP con requests tipados | `AN.MediatR.Contracts` |
+| Escribes un proyecto de contratos gRPC | `AN.MediatR.Contracts` |
 | Escribes pipeline behaviors o handlers | `MediatR` |
 | Construyes un cliente que *resolverá* `IMediator` (aunque proxye a HTTP) | `MediatR` |
 
-Regla general: *si llamas a `.Send(...)` o `.Publish(...)` necesitas `MediatR`; si solo declaras tipos, `MediatR.Contracts` basta.*
+Regla general: *si llamas a `.Send(...)` o `.Publish(...)` necesitas `MediatR`; si solo declaras tipos, `AN.MediatR.Contracts` basta.*
 
 ---
 
@@ -200,13 +200,13 @@ Regla general: *si llamas a `.Send(...)` o `.Publish(...)` necesitas `MediatR`; 
 
 Namespace `MediatR`:
 
-- De `MediatR.Contracts`: `IBaseRequest`, `IRequest`, `IRequest<TResponse>`, `IStreamRequest<TResponse>`, `INotification`, `Unit`.
+- De `AN.MediatR.Contracts`: `IBaseRequest`, `IRequest`, `IRequest<TResponse>`, `IStreamRequest<TResponse>`, `INotification`, `Unit`.
 - De `MediatR`: `IMediator`, `ISender`, `IPublisher`, `IRequestHandler<TRequest, TResponse>`, `IRequestHandler<TRequest>`, `NotificationHandler<TNotification>`, `INotificationHandler<TNotification>`, `IStreamRequestHandler<TRequest, TResponse>`, `IPipelineBehavior<TRequest, TResponse>`, `IStreamPipelineBehavior<TRequest, TResponse>`, `RequestHandlerDelegate<TResponse>`, `StreamHandlerDelegate<TResponse>`, `INotificationPublisher`, `NotificationHandlerExecutor`, `Mediator`.
 
-Namespace `MediatR.Pipeline`: procesadores y handlers de excepciones.
+Namespace `AN.MediatR.Pipeline`: procesadores y handlers de excepciones.
 
-Namespace `MediatR.NotificationPublishers`: los dos publishers built-in.
+Namespace `AN.MediatR.NotificationPublishers`: los dos publishers built-in.
 
-Namespace `MediatR.Entities`: `OpenBehavior`.
+Namespace `AN.MediatR.Entities`: `OpenBehavior`.
 
 Namespace `Microsoft.Extensions.DependencyInjection`: `AddMediatR`, `MediatRServiceConfiguration`, `RequestExceptionActionProcessorStrategy`.

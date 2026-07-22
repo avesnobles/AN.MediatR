@@ -165,7 +165,7 @@ Si `IMediator` es scoped (común en ASP.NET Core), no lo pases a `Task.Run(...)`
 1. **Reusa instancias de behavior**. Regístralas como transient salvo que necesiten estado; transient es el default más seguro.
 2. **Prefiere registros explícitos en rutas calientes**. `services.AddTransient<IRequestHandler<Hot, HotResponse>, HotHandler>()` evita coste de escaneo si arrancas muchos procesos (tests).
 3. **Evita reflexión dentro de behaviors**. Todo lo necesario para llamar al siguiente paso está en tu closure.
-4. **Benchmarkea antes de optimizar**. `test/MediatR.Benchmarks` te da el coste base; AN.MediatR ya es muy rápido para la mayoría de cargas.
+4. **Benchmarkea antes de optimizar**. `test/AN.MediatR.Benchmarks` te da el coste base; AN.MediatR ya es muy rápido para la mayoría de cargas.
 5. **Cachea pipelines compuestos si llamas a `Send` en un bucle caliente**. No puedes cachear la cadena resuelta completa porque los servicios DI pueden ser scoped, pero sí puedes cachear **estado inmutable** que los behaviors necesiten.
 
 ---
@@ -287,4 +287,4 @@ Sustituto de `void` en contextos genéricos. `Task<Unit>` es un tipo válido; `T
 
 - [Wiki original de MediatR](https://github.com/jbogard/MediatR/wiki) — más ejemplos y patrones (la mayoría siguen aplicando).
 - [Posts de Jimmy Bogard](https://www.jimmybogard.com/) — escritos del autor original sobre CQRS y mediator.
-- `samples/MediatR.Examples.*` — demos ejecutables en el repo.
+- `samples/AN.MediatR.Examples.*` — demos ejecutables en el repo.

@@ -7,19 +7,19 @@
 | Language | C# 13 (`LangVersion` = `13.0` in `Directory.Build.props`) |
 | Runtime | .NET Standard 2.0, .NET 8, .NET 9, .NET 10, .NET Framework 4.6.2 (Windows only) |
 | Target frameworks (`MediatR`) | `netstandard2.0;net8.0;net9.0;net10.0` (+ `net462` on Windows) |
-| Target frameworks (`MediatR.Contracts`) | `netstandard2.0` |
+| Target frameworks (`AN.MediatR.Contracts`) | `netstandard2.0` |
 | DI abstractions | `Microsoft.Extensions.DependencyInjection.Abstractions` (v10.0.0) |
 | Polyfill | `IsExternalInit` (so `init` works on netstandard2.0) |
 | Async polyfill | `Microsoft.Bcl.AsyncInterfaces` (v10.0.0, only on netstandard2.0) |
 | Source linking | `Microsoft.SourceLink.GitHub` (8.0.0) |
 | Versioning | `MinVer` (6.0.0) with tag prefix `v` |
-| Signing | Strong-named with `MediatR.snk` |
-| Package license | **Apache-2.0** (both `MediatR` and `MediatR.Contracts`) |
+| Signing | Strong-named with `AN.MediatR.snk` |
+| Package license | **Apache-2.0** (both `AN.MediatR` and `AN.MediatR.Contracts`) |
 | Warnings as errors | Yes (`TreatWarningsAsErrors = true`) |
 | Documentation XML | Generated (`GenerateDocumentationFile = true`) |
 | Deterministic build | Yes (`Deterministic = true`) |
 
-Source: [Directory.Build.props](../../Directory.Build.props), [src/MediatR/MediatR.csproj](../../src/MediatR/MediatR.csproj), [src/MediatR.Contracts/MediatR.Contracts.csproj](../../src/MediatR.Contracts/MediatR.Contracts.csproj).
+Source: [Directory.Build.props](../../Directory.Build.props), [src/AN.MediatR/AN.MediatR.csproj](../../src/AN.MediatR/AN.MediatR.csproj), [src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj](../../src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj).
 
 > **Fork baseline**: AN.MediatR starts from **MediatR v12.5** (`jbogard/MediatR`, Apache-2.0). The AN team has additionally cherry-picked selected non-licensing improvements from upstream v13+ (F# assembly scanning resilience, nested-generic pipeline behavior support, notification-handler deduplication, newer target frameworks). The upstream licensing subsystem is deliberately **not** ported.
 
@@ -29,8 +29,8 @@ Source: [Directory.Build.props](../../Directory.Build.props), [src/MediatR/Media
 
 ```
 AN.MediatR/
-├── MediatR.sln                     # Solution file (classic sln format)
-├── MediatR.snk                     # Strong-name signing key
+├── AN.MediatR.sln                     # Solution file (classic sln format)
+├── AN.MediatR.snk                     # Strong-name signing key
 ├── Directory.Build.props           # Shared MSBuild props for all projects
 ├── Build.ps1                       # Clean + build + test + pack MediatR
 ├── BuildContracts.ps1              # Build + pack MediatR.Contracts
@@ -86,31 +86,31 @@ AN.MediatR is deliberately small. At the highest level, the library is organized
 
 ### 1. Contracts (public API)
 
-Located mostly in `src/MediatR.Contracts/` and partially in `src/MediatR/`.
+Located mostly in `src/AN.MediatR.Contracts/` and partially in `src/AN.MediatR/`.
 
 **Purpose**: Declare marker interfaces that request, notification, and stream message types implement. No behavior.
 
 Key types:
 
 - `IBaseRequest`, `IRequest`, `IRequest<TResponse>`, `IStreamRequest<TResponse>`, `INotification`, `Unit`.
-- The handler interfaces also live in `src/MediatR/`: `IRequestHandler`, `INotificationHandler`, `IStreamRequestHandler`.
+- The handler interfaces also live in `src/AN.MediatR/`: `IRequestHandler`, `INotificationHandler`, `IStreamRequestHandler`.
 - Pipeline contracts: `IPipelineBehavior`, `IStreamPipelineBehavior`, `IRequestPreProcessor`, `IRequestPostProcessor`, `IRequestExceptionHandler`, `IRequestExceptionAction`, `INotificationPublisher`.
 
 ### 2. Mediator core
 
-`src/MediatR/Mediator.cs`.
+`src/AN.MediatR/Mediator.cs`.
 
 The `Mediator` class implements `IMediator` (which extends both `ISender` and `IPublisher`). It caches handler wrappers in static `ConcurrentDictionary<Type, ...>` instances and dispatches messages through type-erased wrappers.
 
 ### 3. Wrappers (type erasure)
 
-`src/MediatR/Wrappers/`.
+`src/AN.MediatR/Wrappers/`.
 
 `RequestHandlerWrapper`, `NotificationHandlerWrapper`, and `StreamRequestHandlerWrapper` translate strongly-typed generic handler calls into a uniform non-generic delegate, so all dispatched messages can share the same cache.
 
 ### 4. Pipeline + Registration
 
-`src/MediatR/Pipeline/` + `src/MediatR/Registration/` + `src/MediatR/MicrosoftExtensionsDI/`.
+`src/AN.MediatR/Pipeline/` + `src/AN.MediatR/Registration/` + `src/AN.MediatR/MicrosoftExtensionsDI/`.
 
 Pipeline behaviors (`IPipelineBehavior<TRequest, TResponse>`) form a chain around each request handler. Pre/post-processors and exception handlers/actions are implemented as dedicated `IPipelineBehavior` decorators:
 
@@ -166,12 +166,12 @@ For streaming, the pipeline is wrapped in a chain of `IStreamPipelineBehavior<,>
 | Namespace | Purpose |
 |-----------|---------|
 | `MediatR` | Public interfaces and the `Mediator` implementation |
-| `MediatR.Wrappers` | Internal type-erasure wrappers |
-| `MediatR.Pipeline` | Pipeline interfaces + pre/post/exception behaviors |
-| `MediatR.NotificationPublishers` | Built-in publisher strategies |
-| `MediatR.Registration` | `ServiceRegistrar` (assembly scanning) |
-| `MediatR.Entities` | `OpenBehavior` registration entity |
-| `MediatR.Internal` | `HandlersOrderer`, `ObjectDetails` (internal helpers) |
+| `AN.MediatR.Wrappers` | Internal type-erasure wrappers |
+| `AN.MediatR.Pipeline` | Pipeline interfaces + pre/post/exception behaviors |
+| `AN.MediatR.NotificationPublishers` | Built-in publisher strategies |
+| `AN.MediatR.Registration` | `ServiceRegistrar` (assembly scanning) |
+| `AN.MediatR.Entities` | `OpenBehavior` registration entity |
+| `AN.MediatR.Internal` | `HandlersOrderer`, `ObjectDetails` (internal helpers) |
 | `Microsoft.Extensions.DependencyInjection` | `AddMediatR` extension + `MediatRServiceConfiguration` + `RequestExceptionActionProcessorStrategy` |
 
 Note the deliberate decision to place the DI extensions in the `Microsoft.Extensions.DependencyInjection` namespace so `AddMediatR` appears as a first-class service collection extension without additional `using` statements.
@@ -184,7 +184,7 @@ The build produces two NuGet packages:
 
 | Package | License | Depends on |
 |---------|---------|------------|
-| `MediatR` | Apache-2.0 | `MediatR.Contracts`, `Microsoft.Extensions.DependencyInjection.Abstractions` |
-| `MediatR.Contracts` | Apache-2.0 | — |
+| `MediatR` | Apache-2.0 | `AN.MediatR.Contracts`, `Microsoft.Extensions.DependencyInjection.Abstractions` |
+| `AN.MediatR.Contracts` | Apache-2.0 | — |
 
 Both packages are fully Apache-2.0. See [Contracts Package](13%20-%20Contracts_Package.md) for why the contracts package is split out (for API contract projects, gRPC contracts, Blazor clients, etc.).

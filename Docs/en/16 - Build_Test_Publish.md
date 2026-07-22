@@ -27,13 +27,13 @@ What it does:
 2. `dotnet clean -c Release` — clears bin/obj.
 3. `dotnet build -c Release` — restores and compiles everything in the solution.
 4. `dotnet test -c Release --no-build -l trx` — runs all test projects, emitting TRX results for CI integration.
-5. `dotnet pack src/MediatR/MediatR.csproj -c Release -o ./artifacts --no-build` — packs only the main `MediatR` package.
+5. `dotnet pack src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build` — packs only the main `AN.MediatR` package.
 
 The `exec` helper is a tiny psake-style wrapper that throws a .NET exception when the previous `dotnet` command fails.
 
-Output: a single `MediatR.<version>.nupkg` (plus its `.snupkg` symbols) in `artifacts/`.
+Output: `AN.MediatR.<version>.nupkg` and `AN.MediatR.Contracts.<version>.nupkg` (plus their `.snupkg` symbols) in `artifacts/`.
 
-> Note: `Build.ps1` does **not** pack `MediatR.Contracts` — that's `BuildContracts.ps1`'s job.
+> Note: `Build.ps1` packs **both** `AN.MediatR` and `AN.MediatR.Contracts`. `BuildContracts.ps1` is kept as a convenience for packing only the contracts package independently.
 
 ---
 
@@ -42,9 +42,9 @@ Output: a single `MediatR.<version>.nupkg` (plus its `.snupkg` symbols) in `arti
 Builds and packs the contracts package separately. Typical shape:
 
 ```powershell
-dotnet clean ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release
-dotnet build ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release -p:ContinuousIntegrationBuild=true
-dotnet pack  ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release -o ./artifacts
+dotnet clean ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release
+dotnet build ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -p:ContinuousIntegrationBuild=true
+dotnet pack  ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -o ./artifacts
 ```
 
 - `ContinuousIntegrationBuild=true` enables deterministic builds — important for `Microsoft.SourceLink.GitHub` to embed reproducible commit metadata.
@@ -73,7 +73,7 @@ For internal feeds (Azure Artifacts, GitHub Packages, MyGet), override `NUGET_UR
 
 ## MinVer versioning
 
-Source: [src/MediatR/MediatR.csproj](../../src/MediatR/MediatR.csproj) — `<PackageReference Include="MinVer" ... />` + `<MinVerTagPrefix>v</MinVerTagPrefix>`.
+Source: [src/AN.MediatR/AN.MediatR.csproj](../../src/AN.MediatR/AN.MediatR.csproj) — `<PackageReference Include="MinVer" ... />` + `<MinVerTagPrefix>v</MinVerTagPrefix>`.
 
 MinVer computes the NuGet package version from git tags:
 
@@ -101,7 +101,7 @@ To cut a release:
 
 ## Tests overview
 
-### `test/MediatR.Tests`
+### `test/AN.MediatR.Tests`
 
 The full xUnit test suite. Covers:
 
@@ -113,11 +113,11 @@ The full xUnit test suite. Covers:
 - Stream request dispatch and stream pipeline behavior composition.
 - `ObjectDetails` and `HandlersOrderer` edge cases.
 - `Unit.Value`, `Unit.Task`, `Unit` comparison and equality semantics.
-- DI registration and scanning (inside `test/MediatR.Tests/MicrosoftExtensionsDI/`): assembly scanning, `TypeEvaluator` filter, `AutoRegisterRequestProcessors`, generic-registration limits, duplicate registration idempotence, accessibility edge cases.
+- DI registration and scanning (inside `test/AN.MediatR.Tests/MicrosoftExtensionsDI/`): assembly scanning, `TypeEvaluator` filter, `AutoRegisterRequestProcessors`, generic-registration limits, duplicate registration idempotence, accessibility edge cases.
 
 > In v12.5 there is no separate `MediatR.DependencyInjectionTests` project — everything lives under `MediatR.Tests`.
 
-### `test/MediatR.Benchmarks`
+### `test/AN.MediatR.Benchmarks`
 
 `BenchmarkDotNet` microbenchmarks:
 
@@ -130,21 +130,21 @@ The full xUnit test suite. Covers:
 Run with:
 
 ```bash
-dotnet run -c Release --project test/MediatR.Benchmarks
+dotnet run -c Release --project test/AN.MediatR.Benchmarks
 ```
 
 ---
 
 ## Assembly signing
 
-Both projects are **strong-named** via the shared key file `MediatR.snk`:
+Both projects are **strong-named** via the shared key file `AN.MediatR.snk`:
 
 ```xml
 <SignAssembly>true</SignAssembly>
-<AssemblyOriginatorKeyFile>..\..\MediatR.snk</AssemblyOriginatorKeyFile>
+<AssemblyOriginatorKeyFile>..\..\AN.MediatR.snk</AssemblyOriginatorKeyFile>
 ```
 
-This produces a public/private signed assembly. In v12.5 there is **no `InternalsVisibleTo`** declared in `MediatR.csproj` — the test project does not need access to internal types.
+This produces a public/private signed assembly. In v12.5 there is **no `InternalsVisibleTo`** declared in `AN.MediatR.csproj` — the test project does not need access to internal types.
 
 ---
 
@@ -164,7 +164,7 @@ Environment variables used by `Push.ps1`:
 
 ## Target framework matrix
 
-`MediatR` produces binaries for several TFMs:
+`AN.MediatR` produces binaries for several TFMs:
 
 | TFM | Notes |
 |-----|-------|
@@ -172,9 +172,9 @@ Environment variables used by `Push.ps1`:
 | `net8.0` | Current LTS .NET. |
 | `net9.0` | Current STS .NET. |
 | `net10.0` | Upcoming LTS — supported as soon as the SDK is available. |
-| `net462` | .NET Framework 4.6.2, only produced on Windows builds (conditional in `MediatR.csproj`). |
+| `net462` | .NET Framework 4.6.2, only produced on Windows builds (conditional in `AN.MediatR.csproj`). |
 
-`MediatR.Contracts` targets only `netstandard2.0`. Since it has no runtime logic, one TFM suffices.
+`AN.MediatR.Contracts` targets only `netstandard2.0`. Since it has no runtime logic, one TFM suffices.
 
 ### Polyfills
 
@@ -215,8 +215,8 @@ dotnet build -c Release
 dotnet test -c Release --no-build -l trx --verbosity=normal
 
 # 3. Pack both packages
-dotnet pack ./src/MediatR/MediatR.csproj -c Release -o ./artifacts --no-build
-dotnet pack ./src/MediatR.Contracts/MediatR.Contracts.csproj -c Release -o ./artifacts -p:ContinuousIntegrationBuild=true
+dotnet pack ./src/AN.MediatR/AN.MediatR.csproj -c Release -o ./artifacts --no-build
+dotnet pack ./src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj -c Release -o ./artifacts -p:ContinuousIntegrationBuild=true
 
 # 4. (Optional) Push
 $env:NUGET_URL = "https://api.nuget.org/v3/index.json"

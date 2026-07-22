@@ -18,7 +18,7 @@ public interface IPipelineBehavior<in TRequest, TResponse> where TRequest : notn
 }
 ```
 
-Source: [src/MediatR/IPipelineBehavior.cs](../../src/MediatR/IPipelineBehavior.cs).
+Source: [src/AN.MediatR/IPipelineBehavior.cs](../../src/AN.MediatR/IPipelineBehavior.cs).
 
 A behavior:
 
@@ -50,7 +50,7 @@ public override Task<TResponse> Handle(IRequest<TResponse> request, IServiceProv
 }
 ```
 
-Source: [src/MediatR/Wrappers/RequestHandlerWrapper.cs](../../src/MediatR/Wrappers/RequestHandlerWrapper.cs).
+Source: [src/AN.MediatR/Wrappers/RequestHandlerWrapper.cs](../../src/AN.MediatR/Wrappers/RequestHandlerWrapper.cs).
 
 Break this down piece by piece:
 
@@ -237,7 +237,7 @@ See [Streaming](10%20-%20Streaming.md) for details.
 
 ## Built-in behaviors
 
-AN.MediatR ships four built-in behaviors, all living in `MediatR.Pipeline`:
+AN.MediatR ships four built-in behaviors, all living in `AN.MediatR.Pipeline`:
 
 | Behavior | Purpose | Automatic registration |
 |----------|---------|------------------------|

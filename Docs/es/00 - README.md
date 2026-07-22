@@ -24,7 +24,7 @@ AN.MediatR es una **implementación simple y sin pretensiones del patrón Mediat
 | [Streaming](10%20-%20Streaming.md) | `IStreamRequest`, `IStreamRequestHandler`, comportamientos para streams |
 | [Inyección de Dependencias](11%20-%20Inyeccion_de_Dependencias.md) | `AddMediatR`, `MediatRServiceConfiguration`, `ServiceRegistrar`, escaneo, límites de genéricos |
 | [Wrappers e Internos](12%20-%20Wrappers_e_Internos.md) | Wrappers de type-erasure, `HandlersOrderer`, `ObjectDetails` |
-| [Paquete Contracts](13%20-%20Paquete_Contracts.md) | Paquete NuGet `MediatR.Contracts` y `TypeForwardings` |
+| [Paquete Contracts](13%20-%20Paquete_Contracts.md) | Paquete NuGet `AN.MediatR.Contracts` y `TypeForwardings` |
 | [Ejemplos de Uso](14%20-%20Ejemplos_de_Uso.md) | Escenarios típicos con código: Ping/Pong, notificaciones, streams, excepciones |
 | [Integración de Contenedores DI](15%20-%20Integracion_Contenedores_DI.md) | ASP.NET Core, Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
 | [Build, Tests y Publicación](16%20-%20Build_Tests_Publicacion.md) | `Build.ps1`, `BuildContracts.ps1`, `Push.ps1`, tests, benchmarks |
@@ -60,12 +60,12 @@ Soporta tres tipos de mensajes:
 |----------|------|-------------|
 | `src/MediatR` | Librería (NuGet) | Mediator principal, pipeline, extensiones DI |
 | `src/MediatR.Contracts` | Librería (NuGet) | Contratos mínimos: `IRequest`, `INotification`, `IStreamRequest`, `Unit` |
-| `samples/MediatR.Examples` | Ejemplo | Ping/Pong, notificaciones, procesadores, excepciones |
-| `samples/MediatR.Examples.AspNetCore` | Ejemplo | Integración con DI de ASP.NET Core |
-| `samples/MediatR.Examples.PublishStrategies` | Ejemplo | 6 estrategias de publicación de notificaciones |
-| `samples/MediatR.Examples.*` | Ejemplos | Integración con Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
-| `test/MediatR.Tests` | xUnit | Tests del núcleo + registro en DI |
-| `test/MediatR.Benchmarks` | BenchmarkDotNet | Benchmarks de rendimiento |
+| `samples/AN.MediatR.Examples` | Ejemplo | Ping/Pong, notificaciones, procesadores, excepciones |
+| `samples/AN.MediatR.Examples.AspNetCore` | Ejemplo | Integración con DI de ASP.NET Core |
+| `samples/AN.MediatR.Examples.PublishStrategies` | Ejemplo | 6 estrategias de publicación de notificaciones |
+| `samples/AN.MediatR.Examples.*` | Ejemplos | Integración con Autofac, DryIoc, Lamar, LightInject, SimpleInjector, Stashbox, Windsor |
+| `test/AN.MediatR.Tests` | xUnit | Tests del núcleo + registro en DI |
+| `test/AN.MediatR.Benchmarks` | BenchmarkDotNet | Benchmarks de rendimiento |
 
 ---
 
@@ -97,7 +97,7 @@ Soporta tres tipos de mensajes:
 
 1. Cada sección vive en su propio archivo Markdown con un prefijo numérico que indica el orden de lectura.
 2. Las referencias cruzadas usan enlaces relativos y espacios URL-encoded (p. ej. `01%20-%20Arquitectura.md`).
-3. Los fragmentos de código usan los nombres exactos del código real. Las rutas siguen el convenio `src/MediatR/...`.
+3. Los fragmentos de código usan los nombres exactos del código real. Las rutas siguen el convenio `src/AN.MediatR/...`.
 4. Hay una versión en inglés de esta documentación disponible en [`Docs/en/`](../en/).
 
 ---
@@ -105,6 +105,6 @@ Soporta tres tipos de mensajes:
 ## Cómo contribuir a esta documentación
 
 - Mantén cada sección sincronizada con el código — revisa tras cambios significativos.
-- Referencia las rutas de archivos al documentar detalles de implementación (`src/MediatR/Mediator.cs:42`).
+- Referencia las rutas de archivos al documentar detalles de implementación (`src/AN.MediatR/Mediator.cs:42`).
 - No dupliques información; enlaza a la sección correspondiente.
 - Mantén alineadas las dos versiones (`en` y `es`) cuando añadas o edites contenido.

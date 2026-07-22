@@ -18,7 +18,7 @@ public interface IPipelineBehavior<in TRequest, TResponse> where TRequest : notn
 }
 ```
 
-Fuente: [src/MediatR/IPipelineBehavior.cs](../../src/MediatR/IPipelineBehavior.cs).
+Fuente: [src/AN.MediatR/IPipelineBehavior.cs](../../src/AN.MediatR/IPipelineBehavior.cs).
 
 Un comportamiento:
 
@@ -50,7 +50,7 @@ public override Task<TResponse> Handle(IRequest<TResponse> request, IServiceProv
 }
 ```
 
-Fuente: [src/MediatR/Wrappers/RequestHandlerWrapper.cs](../../src/MediatR/Wrappers/RequestHandlerWrapper.cs).
+Fuente: [src/AN.MediatR/Wrappers/RequestHandlerWrapper.cs](../../src/AN.MediatR/Wrappers/RequestHandlerWrapper.cs).
 
 Desglose:
 
@@ -237,7 +237,7 @@ Ver [Streaming](10%20-%20Streaming.md) para detalles.
 
 ## Comportamientos built-in
 
-AN.MediatR incluye cuatro comportamientos integrados, todos en `MediatR.Pipeline`:
+AN.MediatR incluye cuatro comportamientos integrados, todos en `AN.MediatR.Pipeline`:
 
 | Comportamiento | Propósito | Registro automático |
 |----------------|-----------|---------------------|

@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find . -iname \"*.nupkg\")",
+      "Bash(find . -iname \"*.snupkg\")",
+      "Bash(ls src/MediatR/bin/Release/)",
+      "Bash(mv src/MediatR src/AN.MediatR)",
+      "Bash(mv src/MediatR.Contracts src/AN.MediatR.Contracts)",
+      "Bash(mv test/MediatR.Tests test/AN.MediatR.Tests)",
+      "Bash(mv test/MediatR.Benchmarks test/AN.MediatR.Benchmarks)",
+      "Bash(mv samples/MediatR.Examples samples/AN.MediatR.Examples)",
+      "Bash(mv MediatR.sln AN.MediatR.sln)",
+      "Bash(mv MediatR.snk AN.MediatR.snk)",
+      "Bash(mv src/AN.MediatR/MediatR.csproj src/AN.MediatR/AN.MediatR.csproj)",
+      "Bash(mv src/AN.MediatR.Contracts/MediatR.Contracts.csproj src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj)",
+      "Bash(mv test/AN.MediatR.Tests/MediatR.Tests.csproj test/AN.MediatR.Tests/AN.MediatR.Tests.csproj)",
+      "Bash(echo \"=== Remaining \\\\\\\\bMediatR\\\\\\\\b \\(excluding AddMediatR / MediatRService...\\) ===\")",
+      "Bash(printf 'a\\\\\\\\b\\\\\\\\c\\\\n')",
+      "Bash(python -c ' *)",
+      "Bash(python fix_csproj.py)",
+      "Bash(python fix_sln.py)",
+      "Bash(python fix_docs.py)",
+      "Bash(\\\\b\" Docs/ | head -20)",
+      "Bash(python fix_docs2.py)"
+    ]
+  }
+}

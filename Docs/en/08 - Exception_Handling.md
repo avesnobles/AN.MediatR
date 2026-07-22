@@ -5,7 +5,7 @@ AN.MediatR provides **two** parallel mechanisms for reacting to exceptions throw
 1. **Exception actions** (`IRequestExceptionAction<TRequest, TException>`) — observe and react (logging, metrics). Always rethrow.
 2. **Exception handlers** (`IRequestExceptionHandler<TRequest, TResponse, TException>`) — recover and return an alternate response.
 
-Both are implemented as decorator `IPipelineBehavior` instances automatically wired by `ServiceRegistrar`. Both live in namespace `MediatR.Pipeline`.
+Both are implemented as decorator `IPipelineBehavior` instances automatically wired by `ServiceRegistrar`. Both live in namespace `AN.MediatR.Pipeline`.
 
 ---
 
@@ -22,7 +22,7 @@ public interface IRequestExceptionAction<in TRequest, in TException>
 }
 ```
 
-Source: [src/MediatR/Pipeline/IRequestExceptionAction.cs](../../src/MediatR/Pipeline/IRequestExceptionAction.cs).
+Source: [src/AN.MediatR/Pipeline/IRequestExceptionAction.cs](../../src/AN.MediatR/Pipeline/IRequestExceptionAction.cs).
 
 ### Semantics
 
@@ -69,7 +69,7 @@ public interface IRequestExceptionHandler<in TRequest, TResponse, in TException>
 }
 ```
 
-Source: [src/MediatR/Pipeline/IRequestExceptionHandler.cs](../../src/MediatR/Pipeline/IRequestExceptionHandler.cs).
+Source: [src/AN.MediatR/Pipeline/IRequestExceptionHandler.cs](../../src/AN.MediatR/Pipeline/IRequestExceptionHandler.cs).
 
 ### `RequestExceptionHandlerState<TResponse>`
 
@@ -122,7 +122,7 @@ public class TranslateNotFound<TRequest, TResponse> : IRequestExceptionHandler<T
 
 ### `RequestExceptionProcessorBehavior<TRequest, TResponse>`
 
-Source: [src/MediatR/Pipeline/RequestExceptionProcessorBehavior.cs](../../src/MediatR/Pipeline/RequestExceptionProcessorBehavior.cs).
+Source: [src/AN.MediatR/Pipeline/RequestExceptionProcessorBehavior.cs](../../src/AN.MediatR/Pipeline/RequestExceptionProcessorBehavior.cs).
 
 ```csharp
 public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -167,7 +167,7 @@ Key points:
 
 ### `RequestExceptionActionProcessorBehavior<TRequest, TResponse>`
 
-Source: [src/MediatR/Pipeline/RequestExceptionActionProcessorBehavior.cs](../../src/MediatR/Pipeline/RequestExceptionActionProcessorBehavior.cs).
+Source: [src/AN.MediatR/Pipeline/RequestExceptionActionProcessorBehavior.cs](../../src/AN.MediatR/Pipeline/RequestExceptionActionProcessorBehavior.cs).
 
 Same exception-type-walk + prioritization + dedupe pattern, but:
 
@@ -178,9 +178,9 @@ Same exception-type-walk + prioritization + dedupe pattern, but:
 
 ## Priority via `HandlersOrderer`
 
-Both behaviors use `MediatR.Internal.HandlersOrderer.Prioritize(handlers, request)` to sort handlers before execution.
+Both behaviors use `AN.MediatR.Internal.HandlersOrderer.Prioritize(handlers, request)` to sort handlers before execution.
 
-Source: [src/MediatR/Internal/HandlersOrderer.cs](../../src/MediatR/Internal/HandlersOrderer.cs), [src/MediatR/Internal/ObjectDetails.cs](../../src/MediatR/Internal/ObjectDetails.cs).
+Source: [src/AN.MediatR/Internal/HandlersOrderer.cs](../../src/AN.MediatR/Internal/HandlersOrderer.cs), [src/AN.MediatR/Internal/ObjectDetails.cs](../../src/AN.MediatR/Internal/ObjectDetails.cs).
 
 ### Rules, in order of precedence
 
@@ -246,7 +246,7 @@ public enum RequestExceptionActionProcessorStrategy
 }
 ```
 
-Source: [src/MediatR/MicrosoftExtensionsDI/RequestExceptionActionProcessorStrategy.cs](../../src/MediatR/MicrosoftExtensionsDI/RequestExceptionActionProcessorStrategy.cs).
+Source: [src/AN.MediatR/MicrosoftExtensionsDI/RequestExceptionActionProcessorStrategy.cs](../../src/AN.MediatR/MicrosoftExtensionsDI/RequestExceptionActionProcessorStrategy.cs).
 
 From `ServiceRegistrar.AddRequiredServices`:
 

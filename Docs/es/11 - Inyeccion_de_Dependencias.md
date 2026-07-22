@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
 }
 ```
 
-Fuente: [src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs](../../src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs).
+Fuente: [src/AN.MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs](../../src/AN.MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs).
 
 > Las extensiones viven en el namespace `Microsoft.Extensions.DependencyInjection` así que no necesitas un `using` adicional si ya tienes `AddControllers()`, `AddLogging()`, etc.
 
@@ -58,7 +58,7 @@ El escaneo de ensamblados no es idempotente por defecto — `AddMediatR` puede l
 
 ## `MediatRServiceConfiguration`
 
-Fuente: [src/MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs](../../src/MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs).
+Fuente: [src/AN.MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs](../../src/AN.MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs).
 
 Configuración fluida. Todos los métodos devuelven `this` para encadenarlos.
 
@@ -150,7 +150,7 @@ cfg.RegisterGenericHandlers = false;
 
 ## `ServiceRegistrar` — cómo funciona el escaneo
 
-Fuente: [src/MediatR/Registration/ServiceRegistrar.cs](../../src/MediatR/Registration/ServiceRegistrar.cs).
+Fuente: [src/AN.MediatR/Registration/ServiceRegistrar.cs](../../src/AN.MediatR/Registration/ServiceRegistrar.cs).
 
 ### Flujo de alto nivel
 
@@ -325,13 +325,13 @@ foreach (var sd in services)
 
 | Contenedor | Sample |
 |------------|--------|
-| `Microsoft.Extensions.DependencyInjection` | `samples/MediatR.Examples.AspNetCore/` |
-| Autofac | `samples/MediatR.Examples.Autofac/` |
-| DryIoc | `samples/MediatR.Examples.DryIoc/` |
-| Lamar | `samples/MediatR.Examples.Lamar/` |
-| LightInject | `samples/MediatR.Examples.LightInject/` |
-| SimpleInjector | `samples/MediatR.Examples.SimpleInjector/` |
-| Stashbox | `samples/MediatR.Examples.Stashbox/` |
-| Castle Windsor | `samples/MediatR.Examples.Windsor/` |
+| `Microsoft.Extensions.DependencyInjection` | `samples/AN.MediatR.Examples.AspNetCore/` |
+| Autofac | `samples/AN.MediatR.Examples.Autofac/` |
+| DryIoc | `samples/AN.MediatR.Examples.DryIoc/` |
+| Lamar | `samples/AN.MediatR.Examples.Lamar/` |
+| LightInject | `samples/AN.MediatR.Examples.LightInject/` |
+| SimpleInjector | `samples/AN.MediatR.Examples.SimpleInjector/` |
+| Stashbox | `samples/AN.MediatR.Examples.Stashbox/` |
+| Castle Windsor | `samples/AN.MediatR.Examples.Windsor/` |
 
 Para cada uno, ver [Integración de Contenedores DI](15%20-%20Integracion_Contenedores_DI.md).

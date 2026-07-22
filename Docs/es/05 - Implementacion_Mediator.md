@@ -2,14 +2,14 @@
 
 Este documento recorre la clase `Mediator` — implementación por defecto de `IMediator` — de arriba abajo. Léelo si quieres entender **cómo** AN.MediatR despacha mensajes (no solo **qué** hace la API).
 
-Archivo fuente: [src/MediatR/Mediator.cs](../../src/MediatR/Mediator.cs).
+Archivo fuente: [src/AN.MediatR/Mediator.cs](../../src/AN.MediatR/Mediator.cs).
 
 ---
 
 ## Firma de la clase
 
 ```csharp
-namespace MediatR;
+namespace AN.MediatR;
 
 public class Mediator : IMediator
 {
@@ -273,7 +273,7 @@ Espejo de `Send(object)` pero para streams. Solo `IStreamRequest<T>` es válido 
 - Añadir telemetría / spans de tracing alrededor de `Send` / `Publish` / `CreateStream`.
 - Registrar una subclase con `cfg.MediatorImplementationType = typeof(MyMediator)`.
 
-El proyecto `samples/MediatR.Examples.PublishStrategies` hace exactamente eso: su subclase `CustomMediator` acepta un delegate y lo llama desde `PublishCore` para implementar seis estrategias (Async, ParallelNoWait, ParallelWhenAll, ParallelWhenAny, SyncContinueOnException, SyncStopOnException).
+El proyecto `samples/AN.MediatR.Examples.PublishStrategies` hace exactamente eso: su subclase `CustomMediator` acepta un delegate y lo llama desde `PublishCore` para implementar seis estrategias (Async, ParallelNoWait, ParallelWhenAll, ParallelWhenAny, SyncContinueOnException, SyncStopOnException).
 
 ---
 
@@ -299,4 +299,4 @@ Además, `Send(object)` / `CreateStream(object)` / `Publish(object)` lanzan `Arg
 - **Primer dispatch**: además, un `Activator.CreateInstance` + `MakeGenericType` por wrapper. Amortizado sobre la vida de la aplicación.
 - **Memoria**: tres entradas estáticas de `ConcurrentDictionary` por tipo distinto de request / notification / stream-request. Los wrappers son minúsculos (solo tablas de métodos virtuales).
 
-Para la suite de benchmarks, ver `test/MediatR.Benchmarks`.
+Para la suite de benchmarks, ver `test/AN.MediatR.Benchmarks`.

@@ -2,14 +2,14 @@
 
 This document walks through the actual `Mediator` class — the default implementation of `IMediator` — from top to bottom. If you want to understand **how** AN.MediatR dispatches messages (not just **what** the API does), read this.
 
-Source file: [src/MediatR/Mediator.cs](../../src/MediatR/Mediator.cs).
+Source file: [src/AN.MediatR/Mediator.cs](../../src/AN.MediatR/Mediator.cs).
 
 ---
 
 ## Class signature
 
 ```csharp
-namespace MediatR;
+namespace AN.MediatR;
 
 public class Mediator : IMediator
 {
@@ -273,7 +273,7 @@ Mirror of `Send(object)` but for streams. Only `IStreamRequest<T>` is valid — 
 - Add telemetry / tracing spans around `Send` / `Publish` / `CreateStream`.
 - Register a subclass via `cfg.MediatorImplementationType = typeof(MyMediator)`.
 
-The `samples/MediatR.Examples.PublishStrategies` project does exactly that: its `CustomMediator` subclass accepts a delegate and calls it from `PublishCore` to implement six different strategies (Async, ParallelNoWait, ParallelWhenAll, ParallelWhenAny, SyncContinueOnException, SyncStopOnException).
+The `samples/AN.MediatR.Examples.PublishStrategies` project does exactly that: its `CustomMediator` subclass accepts a delegate and calls it from `PublishCore` to implement six different strategies (Async, ParallelNoWait, ParallelWhenAll, ParallelWhenAny, SyncContinueOnException, SyncStopOnException).
 
 ---
 
@@ -299,4 +299,4 @@ Additionally, `Send(object)` / `CreateStream(object)` / `Publish(object)` throw 
 - **First-call dispatch**: additionally one `Activator.CreateInstance` + `MakeGenericType` per wrapper. Amortized over the application's lifetime.
 - **Memory**: three static `ConcurrentDictionary` entries per distinct request / notification / stream-request type. Wrappers are tiny (just virtual method tables).
 
-For the benchmark suite, see `test/MediatR.Benchmarks`.
+For the benchmark suite, see `test/AN.MediatR.Benchmarks`.

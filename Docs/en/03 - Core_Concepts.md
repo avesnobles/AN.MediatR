@@ -36,7 +36,7 @@ Why the split? So callers can declare the narrowest dependency possible. A comma
 
 ## The four message kinds
 
-AN.MediatR classifies every message as one of four kinds. Each has its own marker interface from the `MediatR.Contracts` package.
+AN.MediatR classifies every message as one of four kinds. Each has its own marker interface from the `AN.MediatR.Contracts` package.
 
 ### 1. Request with response — `IRequest<TResponse>`
 

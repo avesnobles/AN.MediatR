@@ -36,7 +36,7 @@ Aunque `IMediator` es la cara pública, está dividido en dos interfaces más es
 
 ## Los cuatro tipos de mensaje
 
-AN.MediatR clasifica cada mensaje en uno de cuatro tipos. Cada uno tiene su propia interfaz marcador del paquete `MediatR.Contracts`.
+AN.MediatR clasifica cada mensaje en uno de cuatro tipos. Cada uno tiene su propia interfaz marcador del paquete `AN.MediatR.Contracts`.
 
 ### 1. Request con respuesta — `IRequest<TResponse>`
 

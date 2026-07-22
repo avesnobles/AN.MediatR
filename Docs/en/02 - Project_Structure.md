@@ -1,6 +1,6 @@
 # Project Structure
 
-This document enumerates every project in the `MediatR.sln` solution, its purpose, dependencies, and relation to the rest of the codebase. It complements [Architecture](01%20-%20Architecture.md), which describes the high-level layering.
+This document enumerates every project in the `AN.MediatR.sln` solution, its purpose, dependencies, and relation to the rest of the codebase. It complements [Architecture](01%20-%20Architecture.md), which describes the high-level layering.
 
 ---
 
@@ -10,7 +10,7 @@ AN.MediatR is organized into three top-level folders inside the repository:
 
 | Folder | Contents |
 |--------|----------|
-| `src/` | The two NuGet packages: `MediatR` and `MediatR.Contracts` |
+| `src/` | The two NuGet packages: `AN.MediatR` and `AN.MediatR.Contracts` |
 | `samples/` | Ten sample projects showing integration patterns |
 | `test/` | Two test projects (unit/DI, benchmarks) |
 
@@ -18,19 +18,19 @@ AN.MediatR is organized into three top-level folders inside the repository:
 
 ## `src/` — Production code
 
-### `src/MediatR/MediatR.csproj`
+### `src/AN.MediatR/AN.MediatR.csproj`
 
 The main library. Produces the `MediatR` NuGet package.
 
 - **Target frameworks**: `netstandard2.0;net8.0;net9.0;net10.0` (plus `net462` on Windows).
 - **Nullable**: enabled.
-- **Strong-named**: yes, via `..\..\MediatR.snk`.
+- **Strong-named**: yes, via `..\..\AN.MediatR.snk`.
 - **XML docs**: generated (`GenerateDocumentationFile = true`).
 - **Package metadata**: package icon, README, Apache-2.0 license expression, project URL.
 - **Versioning**: `MinVer` with tag prefix `v` (e.g. `v12.5.0`).
 - **Dependencies**:
   - `IsExternalInit` (dev-only polyfill) — enables `init`-only properties on `netstandard2.0`.
-  - `MediatR.Contracts` (version `[2.0.1, 3.0.0)`).
+  - `AN.MediatR.Contracts` (version `[2.0.1, 3.0.0)`).
   - `Microsoft.Bcl.AsyncInterfaces` v10.0.0 (only on `netstandard2.0`) — provides `IAsyncEnumerable<T>`.
   - `Microsoft.Extensions.DependencyInjection.Abstractions` v10.0.0.
   - `Microsoft.SourceLink.GitHub` 8.0.0 (dev-only).
@@ -39,7 +39,7 @@ The main library. Produces the `MediatR` NuGet package.
 Folder layout:
 
 ```
-src/MediatR/
+src/AN.MediatR/
 ├── Entities/
 │   └── OpenBehavior.cs
 ├── Internal/
@@ -85,7 +85,7 @@ src/MediatR/
 
 > Note: unlike the v13+ upstream, this tree has **no `Licensing/` folder**, no `license.txt` embedded resource, no `BuildInfo.cs`, no `EmbedBuildDate` MSBuild target. There is no runtime licensing subsystem.
 
-### `src/MediatR.Contracts/MediatR.Contracts.csproj`
+### `src/AN.MediatR.Contracts/AN.MediatR.Contracts.csproj`
 
 A minimal, dependency-free package containing just the contract interfaces.
 
@@ -97,7 +97,7 @@ A minimal, dependency-free package containing just the contract interfaces.
 Contents:
 
 ```
-src/MediatR.Contracts/
+src/AN.MediatR.Contracts/
 ├── INotification.cs           # marker interface for notifications
 ├── IRequest.cs                # IBaseRequest, IRequest, IRequest<TResponse>
 ├── IStreamRequest.cs          # IStreamRequest<TResponse>
@@ -111,7 +111,7 @@ See [Contracts Package](13%20-%20Contracts_Package.md) for rationale and usage.
 
 ## `samples/` — Sample applications
 
-All sample projects are console applications (or a minimal ASP.NET Core host) and reference `src/MediatR/MediatR.csproj` directly.
+All sample projects are console applications (or a minimal ASP.NET Core host) and reference `src/AN.MediatR/AN.MediatR.csproj` directly.
 
 | Project | Purpose |
 |---------|---------|
@@ -138,9 +138,9 @@ See [DI Container Integration](15%20-%20DI_Container_Integration.md) for contain
 
 ## `test/` — Test projects
 
-### `test/MediatR.Tests`
+### `test/AN.MediatR.Tests`
 
-The full xUnit test suite. Located at `test/MediatR.Tests/`. Covers:
+The full xUnit test suite. Located at `test/AN.MediatR.Tests/`. Covers:
 
 - Request and response handling (including `Unit`-returning void requests).
 - Notification publishing (sequential, parallel, custom publishers).
@@ -153,7 +153,7 @@ The full xUnit test suite. Located at `test/MediatR.Tests/`. Covers:
 
 (In v12.5 there is no separate `MediatR.DependencyInjectionTests` project — the DI tests live under `MediatR.Tests/MicrosoftExtensionsDI/`.)
 
-### `test/MediatR.Benchmarks`
+### `test/AN.MediatR.Benchmarks`
 
 `BenchmarkDotNet`-based microbenchmarks for `Send`, `Publish`, `CreateStream`, and pipeline overhead. Useful to detect regressions during refactors.
 
@@ -170,11 +170,11 @@ dotnet test  -c Release --no-build -l trx --verbosity=normal
 dotnet pack  .\src\MediatR\MediatR.csproj -c Release -o .\artifacts --no-build
 ```
 
-Clean + build + test + pack of the main `MediatR` package. Output artifacts go to `./artifacts`.
+Clean + build + test + pack of the main `AN.MediatR` package. Output artifacts go to `./artifacts`.
 
 ### `BuildContracts.ps1`
 
-Dedicated script that builds and packs only `MediatR.Contracts` with `ContinuousIntegrationBuild=true` for deterministic builds.
+Dedicated script that builds and packs only `AN.MediatR.Contracts` with `ContinuousIntegrationBuild=true` for deterministic builds.
 
 ### `Push.ps1`
 
@@ -186,7 +186,7 @@ See [Build, Test & Publish](16%20-%20Build_Test_Publish.md) for details.
 
 ## Solution file
 
-`MediatR.sln` uses the classic text-based `.sln` format. Every project above is referenced there.
+`AN.MediatR.sln` uses the classic text-based `.sln` format. Every project above is referenced there.
 
 ---
 
@@ -195,7 +195,7 @@ See [Build, Test & Publish](16%20-%20Build_Test_Publish.md) for details.
 | File | Purpose |
 |------|---------|
 | `Directory.Build.props` | Shared MSBuild properties (language version 10, treat warnings as errors, suppressed warning codes). |
-| `MediatR.snk` | Strong-name signing key for both `MediatR` and `MediatR.Contracts`. |
+| `AN.MediatR.snk` | Strong-name signing key for both `AN.MediatR` and `AN.MediatR.Contracts`. |
 | `NuGet.Config` | NuGet feed configuration. |
 | `LICENSE` | Apache-2.0 full license text. |
 | `README.md` | Quickstart, also packed as the NuGet README for `MediatR`. |

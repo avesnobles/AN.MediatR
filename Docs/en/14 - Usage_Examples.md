@@ -528,5 +528,5 @@ Only types decorated with `[Handler]` are registered. Useful for opting types in
 
 ## Further reading
 
-- The `samples/MediatR.Examples*` projects contain runnable end-to-end demos for each feature — start there when experimenting.
+- The `samples/AN.MediatR.Examples*` projects contain runnable end-to-end demos for each feature — start there when experimenting.
 - Most common CQRS frameworks (Ardalis.Specification, Clean.Architecture templates, etc.) are already built on MediatR-compatible contracts. Our pipeline behaviors plug into them verbatim.

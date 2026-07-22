@@ -16,7 +16,7 @@ public interface INotificationPublisher
 }
 ```
 
-Source: [src/MediatR/INotificationPublisher.cs](../../src/MediatR/INotificationPublisher.cs).
+Source: [src/AN.MediatR/INotificationPublisher.cs](../../src/AN.MediatR/INotificationPublisher.cs).
 
 The publisher receives:
 
@@ -32,7 +32,7 @@ public record NotificationHandlerExecutor(
     Func<INotification, CancellationToken, Task> HandlerCallback);
 ```
 
-Source: [src/MediatR/NotificationHandlerExecutor.cs](../../src/MediatR/NotificationHandlerExecutor.cs).
+Source: [src/AN.MediatR/NotificationHandlerExecutor.cs](../../src/AN.MediatR/NotificationHandlerExecutor.cs).
 
 ---
 
@@ -51,7 +51,7 @@ var handlers = serviceFactory
 return publish(handlers, notification, cancellationToken);
 ```
 
-Source: [src/MediatR/Wrappers/NotificationHandlerWrapper.cs](../../src/MediatR/Wrappers/NotificationHandlerWrapper.cs).
+Source: [src/AN.MediatR/Wrappers/NotificationHandlerWrapper.cs](../../src/AN.MediatR/Wrappers/NotificationHandlerWrapper.cs).
 
 Important behaviors:
 
@@ -65,7 +65,7 @@ Important behaviors:
 
 ### `ForeachAwaitPublisher` (default)
 
-Source: [src/MediatR/NotificationPublishers/ForeachAwaitPublisher.cs](../../src/MediatR/NotificationPublishers/ForeachAwaitPublisher.cs).
+Source: [src/AN.MediatR/NotificationPublishers/ForeachAwaitPublisher.cs](../../src/AN.MediatR/NotificationPublishers/ForeachAwaitPublisher.cs).
 
 ```csharp
 public class ForeachAwaitPublisher : INotificationPublisher
@@ -92,7 +92,7 @@ public class ForeachAwaitPublisher : INotificationPublisher
 
 ### `TaskWhenAllPublisher`
 
-Source: [src/MediatR/NotificationPublishers/TaskWhenAllPublisher.cs](../../src/MediatR/NotificationPublishers/TaskWhenAllPublisher.cs).
+Source: [src/AN.MediatR/NotificationPublishers/TaskWhenAllPublisher.cs](../../src/AN.MediatR/NotificationPublishers/TaskWhenAllPublisher.cs).
 
 ```csharp
 public class TaskWhenAllPublisher : INotificationPublisher
@@ -283,7 +283,7 @@ If you need different strategies per notification, you can:
     });
     ```
 
-2. **Build a façade class** like the one in `samples/MediatR.Examples.PublishStrategies/Publisher.cs`. It creates one `CustomMediator` per strategy and exposes a `Publish(notification, strategy)` method. See the sample for six strategies (`Async`, `ParallelNoWait`, `ParallelWhenAll`, `ParallelWhenAny`, `SyncContinueOnException`, `SyncStopOnException`).
+2. **Build a façade class** like the one in `samples/AN.MediatR.Examples.PublishStrategies/Publisher.cs`. It creates one `CustomMediator` per strategy and exposes a `Publish(notification, strategy)` method. See the sample for six strategies (`Async`, `ParallelNoWait`, `ParallelWhenAll`, `ParallelWhenAny`, `SyncContinueOnException`, `SyncStopOnException`).
 
 ---
 

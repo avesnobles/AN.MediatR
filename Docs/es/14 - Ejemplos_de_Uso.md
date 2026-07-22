@@ -528,5 +528,5 @@ Solo los tipos decorados con `[Handler]` se registran. Útil para opt-in/opt-out
 
 ## Lectura adicional
 
-- Los proyectos `samples/MediatR.Examples*` contienen demos ejecutables end-to-end para cada característica — empieza por ahí al experimentar.
+- Los proyectos `samples/AN.MediatR.Examples*` contienen demos ejecutables end-to-end para cada característica — empieza por ahí al experimentar.
 - La mayoría de frameworks CQRS comunes (Ardalis.Specification, plantillas Clean.Architecture, etc.) ya están construidos sobre contratos compatibles con MediatR. Nuestros pipeline behaviors se enchufan sin modificaciones.

@@ -22,7 +22,7 @@ Los tres campos estáticos `ConcurrentDictionary<Type, ...>` en la clase `Mediat
 **Command (comando)**  
 En CQRS, un request que muta estado. Se expresa en AN.MediatR como `IRequest` (void) o `IRequest<TResponse>` (cuando se devuelve un resultado como un identificador).
 
-**Contracts (`MediatR.Contracts`)**  
+**Contracts (`AN.MediatR.Contracts`)**  
 Paquete NuGet separado que contiene las interfaces marcador mínimas (`IBaseRequest`, `IRequest`, `IRequest<T>`, `IStreamRequest<T>`, `INotification`) y el tipo valor `Unit`. Licenciado Apache-2.0 para uso en ensamblados de solo contratos.
 
 **CQRS**  
@@ -50,7 +50,7 @@ Implementación de `IStreamRequestHandler<TRequest, TResponse>`. Devuelve `IAsyn
 Implementación de `IRequestExceptionHandler<TRequest, TResponse, TException>`. Se ejecuta cuando el handler lanza; puede recuperar llamando a `state.SetHandled(response)`.
 
 **HandlersOrderer**  
-Helper estático interno (`MediatR.Internal.HandlersOrderer`) que prioriza handlers de excepciones por proximidad de ensamblado y namespace al request.
+Helper estático interno (`AN.MediatR.Internal.HandlersOrderer`) que prioriza handlers de excepciones por proximidad de ensamblado y namespace al request.
 
 **IMediator**  
 Interfaz combinada del mediator. Hereda `ISender` e `IPublisher`.
@@ -89,7 +89,7 @@ Objeto de configuración fluida pasado al delegate `AddMediatR(cfg => ...)`. Rec
 Sinónimo libre de **pipeline behavior**. Refleja la similitud con el middleware de ASP.NET Core.
 
 **MinVer**  
-Herramienta MSBuild de versionado usada por `MediatR.csproj`. Deriva versiones de tags git (prefijo `v*`).
+Herramienta MSBuild de versionado usada por `AN.MediatR.csproj`. Deriva versiones de tags git (prefijo `v*`).
 
 **Notification (notificación)**  
 Evento de fan-out despachado vía `IPublisher.Publish(...)`. Cero a muchos handlers por notificación, sin respuesta.
@@ -101,7 +101,7 @@ Record (`object HandlerInstance, Func<INotification, CancellationToken, Task> Ha
 Implementación interna de `IComparer<ObjectDetails>` usada por `HandlersOrderer` para ordenar handlers por ensamblado / namespace / location.
 
 **OpenBehavior**  
-Objeto de valor (`MediatR.Entities.OpenBehavior`) usado por `cfg.AddOpenBehaviors(IEnumerable<OpenBehavior>)` para registrar un behavior de genérico abierto con `ServiceLifetime` explícito.
+Objeto de valor (`AN.MediatR.Entities.OpenBehavior`) usado por `cfg.AddOpenBehaviors(IEnumerable<OpenBehavior>)` para registrar un behavior de genérico abierto con `ServiceLifetime` explícito.
 
 **Open generic (genérico abierto)**  
 Definición de tipo genérico (`LoggingBehavior<,>`) frente a genérico cerrado (`LoggingBehavior<CreateOrder, int>`).
@@ -143,7 +143,7 @@ Enum que controla si las actions corren **solo para excepciones no gestionadas**
 Wrapper abstracto de type-erasure sobre `IRequestHandler<,>`. Ver [Wrappers e Internos](12%20-%20Wrappers_e_Internos.md).
 
 **ServiceRegistrar**  
-Clase estática (`MediatR.Registration.ServiceRegistrar`) que realiza el escaneo de ensamblados y registra servicios en `IServiceCollection`. Corazón de `AddMediatR`.
+Clase estática (`AN.MediatR.Registration.ServiceRegistrar`) que realiza el escaneo de ensamblados y registra servicios en `IServiceCollection`. Corazón de `AddMediatR`.
 
 **Short-circuit (cortocircuito)**  
 Un pipeline behavior eligiendo **no** llamar a `next`, devolviendo una respuesta directamente. Usado para caching, autorización, feature flags, idempotencia.
@@ -158,7 +158,7 @@ Patrón request/response en el que la respuesta es `IAsyncEnumerable<TResponse>`
 `INotificationPublisher` built-in que arranca cada handler concurrentemente y espera `Task.WhenAll`.
 
 **Type erasure (borrado de tipo)**  
-Técnica de convertir una interfaz genérica (`IRequestHandler<TRequest, TResponse>`) en una clase base no genérica para que las instancias compartan caché. Implementada por la jerarquía de wrappers en `MediatR.Wrappers`.
+Técnica de convertir una interfaz genérica (`IRequestHandler<TRequest, TResponse>`) en una clase base no genérica para que las instancias compartan caché. Implementada por la jerarquía de wrappers en `AN.MediatR.Wrappers`.
 
 **TypeForwardings**  
 Mecanismo CLR que permite a un ensamblado "redirigir" la búsqueda de un tipo a otro. Usado por `MediatR.dll` para redirigir `IRequest`, `INotification`, `Unit`, etc. a `MediatR.Contracts.dll`.
@@ -167,4 +167,4 @@ Mecanismo CLR que permite a un ensamblado "redirigir" la búsqueda de un tipo a 
 Tipo de valor singleton (`MediatR.Unit`) usado como sustituto de `void` en contextos genéricos. `Unit.Value` es el singleton; `Unit.Task` es un `Task<Unit>` preasignado.
 
 **Wrapper**  
-Cualquiera de las clases internas en `MediatR.Wrappers` que traducen una llamada a handler genérico en una llamada virtual con tipo borrado. Ver **Type erasure**.
+Cualquiera de las clases internas en `AN.MediatR.Wrappers` que traducen una llamada a handler genérico en una llamada virtual con tipo borrado. Ver **Type erasure**.

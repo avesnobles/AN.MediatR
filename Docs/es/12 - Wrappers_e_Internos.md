@@ -27,7 +27,7 @@ Hacerlo vía reflexión en cada envío sería extremadamente lento. En su lugar,
 
 ## Wrappers de request
 
-Fuente: [src/MediatR/Wrappers/RequestHandlerWrapper.cs](../../src/MediatR/Wrappers/RequestHandlerWrapper.cs).
+Fuente: [src/AN.MediatR/Wrappers/RequestHandlerWrapper.cs](../../src/AN.MediatR/Wrappers/RequestHandlerWrapper.cs).
 
 ```csharp
 public abstract class RequestHandlerBase
@@ -117,7 +117,7 @@ Diferencias con la versión tipada:
 
 ## Wrappers de notificación
 
-Fuente: [src/MediatR/Wrappers/NotificationHandlerWrapper.cs](../../src/MediatR/Wrappers/NotificationHandlerWrapper.cs).
+Fuente: [src/AN.MediatR/Wrappers/NotificationHandlerWrapper.cs](../../src/AN.MediatR/Wrappers/NotificationHandlerWrapper.cs).
 
 ```csharp
 public abstract class NotificationHandlerWrapper
@@ -157,7 +157,7 @@ Responsabilidades:
 
 ## Wrappers de stream
 
-Fuente: [src/MediatR/Wrappers/StreamRequestHandlerWrapper.cs](../../src/MediatR/Wrappers/StreamRequestHandlerWrapper.cs).
+Fuente: [src/AN.MediatR/Wrappers/StreamRequestHandlerWrapper.cs](../../src/AN.MediatR/Wrappers/StreamRequestHandlerWrapper.cs).
 
 ```csharp
 internal abstract class StreamRequestHandlerBase
@@ -220,7 +220,7 @@ Usados exclusivamente por los behaviors de excepciones (`RequestExceptionProcess
 
 ### `HandlersOrderer`
 
-Fuente: [src/MediatR/Internal/HandlersOrderer.cs](../../src/MediatR/Internal/HandlersOrderer.cs).
+Fuente: [src/AN.MediatR/Internal/HandlersOrderer.cs](../../src/AN.MediatR/Internal/HandlersOrderer.cs).
 
 ```csharp
 internal static class HandlersOrderer
@@ -261,7 +261,7 @@ internal static class HandlersOrderer
 
 ### `ObjectDetails`
 
-Fuente: [src/MediatR/Internal/ObjectDetails.cs](../../src/MediatR/Internal/ObjectDetails.cs).
+Fuente: [src/AN.MediatR/Internal/ObjectDetails.cs](../../src/AN.MediatR/Internal/ObjectDetails.cs).
 
 ```csharp
 internal class ObjectDetails : IComparer<ObjectDetails>
@@ -307,7 +307,7 @@ Consecuencia práctica: un `MyApp.Orders.InvalidOrderExceptionHandler` correrá 
 
 ## Entidad `OpenBehavior`
 
-Fuente: [src/MediatR/Entities/OpenBehavior.cs](../../src/MediatR/Entities/OpenBehavior.cs).
+Fuente: [src/AN.MediatR/Entities/OpenBehavior.cs](../../src/AN.MediatR/Entities/OpenBehavior.cs).
 
 Objeto de valor público para registrar múltiples behaviors de genéricos abiertos con lifetimes explícitos:
 
@@ -343,7 +343,7 @@ Usado por `cfg.AddOpenBehaviors(IEnumerable<OpenBehavior>)` — azúcar ergonóm
 
 ## Type forwardings
 
-Fuente: [src/MediatR/TypeForwardings.cs](../../src/MediatR/TypeForwardings.cs).
+Fuente: [src/AN.MediatR/TypeForwardings.cs](../../src/AN.MediatR/TypeForwardings.cs).
 
 ```csharp
 [assembly: TypeForwardedTo(typeof(IBaseRequest))]
@@ -353,7 +353,7 @@ Fuente: [src/MediatR/TypeForwardings.cs](../../src/MediatR/TypeForwardings.cs).
 [assembly: TypeForwardedTo(typeof(Unit))]
 ```
 
-Físicamente esos tipos viven en `MediatR.Contracts`. El ensamblado `MediatR` redirige sus definiciones para que el código existente que referencia `MediatR.IRequest`, `MediatR.INotification`, etc. siga funcionando sin una referencia explícita a `MediatR.Contracts` — y sin duplicar definiciones en ambos ensamblados (lo que sería un desastre de identidad CLR).
+Físicamente esos tipos viven en `AN.MediatR.Contracts`. El ensamblado `MediatR` redirige sus definiciones para que el código existente que referencia `MediatR.IRequest`, `MediatR.INotification`, etc. siga funcionando sin una referencia explícita a `AN.MediatR.Contracts` — y sin duplicar definiciones en ambos ensamblados (lo que sería un desastre de identidad CLR).
 
 Ver [Paquete Contracts](13%20-%20Paquete_Contracts.md) para la justificación.
 

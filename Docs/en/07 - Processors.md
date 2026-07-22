@@ -2,7 +2,7 @@
 
 **Pre-processors** and **post-processors** are a thinner alternative to full pipeline behaviors: they run before (or after) a handler but **cannot short-circuit it, replace the response, or catch exceptions**. If all you need is "run this code before every matching command", use a processor — it's simpler and makes intent clearer.
 
-All processor types live in namespace `MediatR.Pipeline`.
+All processor types live in namespace `AN.MediatR.Pipeline`.
 
 ---
 
@@ -15,7 +15,7 @@ public interface IRequestPreProcessor<in TRequest> where TRequest : notnull
 }
 ```
 
-Source: [src/MediatR/Pipeline/IRequestPreProcessor.cs](../../src/MediatR/Pipeline/IRequestPreProcessor.cs).
+Source: [src/AN.MediatR/Pipeline/IRequestPreProcessor.cs](../../src/AN.MediatR/Pipeline/IRequestPreProcessor.cs).
 
 Runs **before** the handler. Multiple pre-processors are allowed per request; they execute sequentially in DI resolution order.
 
@@ -47,7 +47,7 @@ public interface IRequestPostProcessor<in TRequest, in TResponse> where TRequest
 }
 ```
 
-Source: [src/MediatR/Pipeline/IRequestPostProcessor.cs](../../src/MediatR/Pipeline/IRequestPostProcessor.cs).
+Source: [src/AN.MediatR/Pipeline/IRequestPostProcessor.cs](../../src/AN.MediatR/Pipeline/IRequestPostProcessor.cs).
 
 Runs **after** the handler, receiving both the request and the response. Multiple post-processors allowed. Note that post-processors see the **response as returned by the handler**, after any pipeline behaviors have done their work.
 
@@ -73,7 +73,7 @@ Processors are **not** called directly by the `Mediator`. Instead, AN.MediatR pr
 
 ### `RequestPreProcessorBehavior<TRequest, TResponse>`
 
-Source: [src/MediatR/Pipeline/RequestPreProcessorBehavior.cs](../../src/MediatR/Pipeline/RequestPreProcessorBehavior.cs).
+Source: [src/AN.MediatR/Pipeline/RequestPreProcessorBehavior.cs](../../src/AN.MediatR/Pipeline/RequestPreProcessorBehavior.cs).
 
 ```csharp
 public class RequestPreProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
@@ -99,7 +99,7 @@ Behavior: resolves all `IRequestPreProcessor<TRequest>` instances, `await`s each
 
 ### `RequestPostProcessorBehavior<TRequest, TResponse>`
 
-Source: [src/MediatR/Pipeline/RequestPostProcessorBehavior.cs](../../src/MediatR/Pipeline/RequestPostProcessorBehavior.cs).
+Source: [src/AN.MediatR/Pipeline/RequestPostProcessorBehavior.cs](../../src/AN.MediatR/Pipeline/RequestPostProcessorBehavior.cs).
 
 ```csharp
 public class RequestPostProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
@@ -211,7 +211,7 @@ If you need deterministic ordering **across** processors and behaviors, lean on 
 
 ## Example: Ping sample
 
-From `samples/MediatR.Examples`:
+From `samples/AN.MediatR.Examples`:
 
 ```csharp
 public class GenericRequestPreProcessor<TRequest> : IRequestPreProcessor<TRequest> where TRequest : notnull
@@ -233,7 +233,7 @@ public class GenericRequestPostProcessor<TRequest, TResponse> : IRequestPostProc
 }
 ```
 
-Wired in `samples/MediatR.Examples.AspNetCore/Program.cs`:
+Wired in `samples/AN.MediatR.Examples.AspNetCore/Program.cs`:
 
 ```csharp
 services.AddScoped(typeof(IRequestPreProcessor<>), typeof(GenericRequestPreProcessor<>));

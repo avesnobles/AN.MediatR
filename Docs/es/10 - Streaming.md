@@ -18,7 +18,7 @@ Usa streaming cuando:
 public interface IStreamRequest<out TResponse> { }
 ```
 
-Fuente: [src/MediatR.Contracts/IStreamRequest.cs](../../src/MediatR.Contracts/IStreamRequest.cs).
+Fuente: [src/AN.MediatR.Contracts/IStreamRequest.cs](../../src/AN.MediatR.Contracts/IStreamRequest.cs).
 
 Interfaz marcador. `TResponse` es covariante.
 
@@ -32,7 +32,7 @@ public interface IStreamRequestHandler<in TRequest, out TResponse>
 }
 ```
 
-Fuente: [src/MediatR/IStreamRequestHandler.cs](../../src/MediatR/IStreamRequestHandler.cs).
+Fuente: [src/AN.MediatR/IStreamRequestHandler.cs](../../src/AN.MediatR/IStreamRequestHandler.cs).
 
 El handler devuelve `IAsyncEnumerable<TResponse>`. El llamador controla la enumeración con `await foreach`.
 
@@ -50,7 +50,7 @@ public interface IStreamPipelineBehavior<in TRequest, TResponse> where TRequest 
 }
 ```
 
-Fuente: [src/MediatR/IStreamPipelineBehavior.cs](../../src/MediatR/IStreamPipelineBehavior.cs).
+Fuente: [src/AN.MediatR/IStreamPipelineBehavior.cs](../../src/AN.MediatR/IStreamPipelineBehavior.cs).
 
 Estructuralmente idéntico a `IPipelineBehavior`, con la respuesta reemplazada por un `IAsyncEnumerable<TResponse>`.
 
@@ -100,7 +100,7 @@ await foreach (var order in mediator.CreateStream(new TailOrders { StartId = 0 }
 
 ## Cómo se construye el pipeline de stream
 
-Fuente: [src/MediatR/Wrappers/StreamRequestHandlerWrapper.cs](../../src/MediatR/Wrappers/StreamRequestHandlerWrapper.cs).
+Fuente: [src/AN.MediatR/Wrappers/StreamRequestHandlerWrapper.cs](../../src/AN.MediatR/Wrappers/StreamRequestHandlerWrapper.cs).
 
 ```csharp
 public override async IAsyncEnumerable<TResponse> Handle(
@@ -253,7 +253,7 @@ Si los necesitas para streams, implementa la lógica equivalente directamente en
 
 ## Proyecto de ejemplo
 
-`samples/MediatR.Examples/Streams/` contiene el sample canónico:
+`samples/AN.MediatR.Examples/Streams/` contiene el sample canónico:
 
 ```csharp
 public class Sing : IStreamRequest<Song>
@@ -279,7 +279,7 @@ public class SingHandler : IStreamRequestHandler<Sing, Song>
 Y un pipeline behavior demostrando el patrón decorador:
 
 ```csharp
-// samples/MediatR.Examples/Streams/GenericStreamPipelineBehavior.cs
+// samples/AN.MediatR.Examples/Streams/GenericStreamPipelineBehavior.cs
 public class GenericStreamPipelineBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
 {
     private readonly TextWriter _writer;

@@ -2,13 +2,13 @@
 
 AN.MediatR depende de `Microsoft.Extensions.DependencyInjection.Abstractions` — cualquier contenedor que exponga sus servicios como `IServiceProvider` se puede usar. El repositorio incluye samples listos para ejecutar con las alternativas más populares.
 
-Cada sample resuelve `IMediator` desde el contenedor y llama al `Runner.Run(mediator, writer, projectName, testStreams: true)` compartido en `samples/MediatR.Examples/Runner.cs`. El runner envía `Ping`, publica `Pinged`, dispara `Ponged` (diseñado para fallar), envía `Jing` (también para fallar), opcionalmente hace streaming de `Sing`, y luego ejercita handlers / actions de excepciones.
+Cada sample resuelve `IMediator` desde el contenedor y llama al `Runner.Run(mediator, writer, projectName, testStreams: true)` compartido en `samples/AN.MediatR.Examples/Runner.cs`. El runner envía `Ping`, publica `Pinged`, dispara `Ponged` (diseñado para fallar), envía `Jing` (también para fallar), opcionalmente hace streaming de `Sing`, y luego ejercita handlers / actions de excepciones.
 
 ---
 
 ## Nativo: `Microsoft.Extensions.DependencyInjection`
 
-Sample: `samples/MediatR.Examples.AspNetCore/Program.cs`.
+Sample: `samples/AN.MediatR.Examples.AspNetCore/Program.cs`.
 
 ```csharp
 var services = new ServiceCollection();
@@ -41,7 +41,7 @@ Notas:
 
 ## Autofac
 
-Sample: `samples/MediatR.Examples.Autofac/`.
+Sample: `samples/AN.MediatR.Examples.Autofac/`.
 
 Autofac soporta genéricos abiertos nativamente. Patrón típico:
 
@@ -77,7 +77,7 @@ Particularidades Autofac:
 
 ## DryIoc
 
-Sample: `samples/MediatR.Examples.DryIoc/`.
+Sample: `samples/AN.MediatR.Examples.DryIoc/`.
 
 ```csharp
 var container = new Container();
@@ -105,7 +105,7 @@ DryIoc destaca por su velocidad y soporta `RegisterMany(...)` con predicados cus
 
 ## Lamar
 
-Sample: `samples/MediatR.Examples.Lamar/`.
+Sample: `samples/AN.MediatR.Examples.Lamar/`.
 
 Lamar es un reemplazo drop-in de `ServiceCollection` con mejor soporte de genéricos abiertos. Escaneo idiomático:
 
@@ -133,7 +133,7 @@ var mediator = container.GetInstance<IMediator>();
 
 ## LightInject
 
-Sample: `samples/MediatR.Examples.LightInject/`.
+Sample: `samples/AN.MediatR.Examples.LightInject/`.
 
 ```csharp
 var container = new ServiceContainer();
@@ -153,7 +153,7 @@ var mediator = container.GetInstance<IMediator>();
 
 ## SimpleInjector
 
-Sample: `samples/MediatR.Examples.SimpleInjector/`.
+Sample: `samples/AN.MediatR.Examples.SimpleInjector/`.
 
 SimpleInjector es notoriamente estricto con el orden de decoradores y desajustes de lifetime — un buen banco de pruebas para verificar que los registros de AN.MediatR son correctos.
 
@@ -185,7 +185,7 @@ Notas:
 
 ## Stashbox
 
-Sample: `samples/MediatR.Examples.Stashbox/`.
+Sample: `samples/AN.MediatR.Examples.Stashbox/`.
 
 ```csharp
 var container = new StashboxContainer();
@@ -205,7 +205,7 @@ var mediator = container.Resolve<IMediator>();
 
 ## Castle Windsor
 
-Sample: `samples/MediatR.Examples.Windsor/`.
+Sample: `samples/AN.MediatR.Examples.Windsor/`.
 
 ```csharp
 var container = new WindsorContainer();

@@ -2,11 +2,11 @@
 
 This document is the **API reference** for every public type in AN.MediatR. Use it as a lookup table; for conceptual context see [Core Concepts](03%20-%20Core_Concepts.md).
 
-All types below live in namespace `MediatR` unless stated otherwise.
+All types below live in namespace `AN.MediatR` unless stated otherwise.
 
 ---
 
-## Marker interfaces (from `MediatR.Contracts`)
+## Marker interfaces (from `AN.MediatR.Contracts`)
 
 ### `IBaseRequest`
 
@@ -72,7 +72,7 @@ Used internally as the response type for `IRequest` (void) in the pipeline, so `
 
 ### `ISender`
 
-Source: [src/MediatR/ISender.cs](../../src/MediatR/ISender.cs).
+Source: [src/AN.MediatR/ISender.cs](../../src/AN.MediatR/ISender.cs).
 
 ```csharp
 public interface ISender
@@ -101,7 +101,7 @@ Two `CreateStream` overloads mirror the same pattern for stream requests.
 
 ### `IPublisher`
 
-Source: [src/MediatR/IPublisher.cs](../../src/MediatR/IPublisher.cs).
+Source: [src/AN.MediatR/IPublisher.cs](../../src/AN.MediatR/IPublisher.cs).
 
 ```csharp
 public interface IPublisher
@@ -117,7 +117,7 @@ Notification dispatcher. Two `Publish` overloads — typed and dynamic.
 
 ### `IMediator`
 
-Source: [src/MediatR/IMediator.cs](../../src/MediatR/IMediator.cs).
+Source: [src/AN.MediatR/IMediator.cs](../../src/AN.MediatR/IMediator.cs).
 
 ```csharp
 public interface IMediator : ISender, IPublisher { }
@@ -131,7 +131,7 @@ Combined interface. Exposed by the DI container (with `ISender` and `IPublisher`
 
 ### `IRequestHandler<TRequest, TResponse>`
 
-Source: [src/MediatR/IRequestHandler.cs](../../src/MediatR/IRequestHandler.cs).
+Source: [src/AN.MediatR/IRequestHandler.cs](../../src/AN.MediatR/IRequestHandler.cs).
 
 ```csharp
 public interface IRequestHandler<in TRequest, TResponse>
@@ -157,7 +157,7 @@ The void variant. Internally wrapped to return `Task<Unit>` so the pipeline stay
 
 ### `INotificationHandler<TNotification>`
 
-Source: [src/MediatR/INotificationHandler.cs](../../src/MediatR/INotificationHandler.cs).
+Source: [src/AN.MediatR/INotificationHandler.cs](../../src/AN.MediatR/INotificationHandler.cs).
 
 ```csharp
 public interface INotificationHandler<in TNotification>
@@ -189,7 +189,7 @@ Convenience base class when your handler is synchronous. The `Task` wrapping is 
 
 ### `IStreamRequestHandler<TRequest, TResponse>`
 
-Source: [src/MediatR/IStreamRequestHandler.cs](../../src/MediatR/IStreamRequestHandler.cs).
+Source: [src/AN.MediatR/IStreamRequestHandler.cs](../../src/AN.MediatR/IStreamRequestHandler.cs).
 
 ```csharp
 public interface IStreamRequestHandler<in TRequest, out TResponse>
@@ -215,7 +215,7 @@ The "call the next step of the pipeline" delegate handed to every `IPipelineBeha
 
 ### `IPipelineBehavior<TRequest, TResponse>`
 
-Source: [src/MediatR/IPipelineBehavior.cs](../../src/MediatR/IPipelineBehavior.cs).
+Source: [src/AN.MediatR/IPipelineBehavior.cs](../../src/AN.MediatR/IPipelineBehavior.cs).
 
 ```csharp
 public interface IPipelineBehavior<in TRequest, TResponse> where TRequest : notnull
@@ -239,7 +239,7 @@ The stream-pipeline equivalent of `RequestHandlerDelegate`.
 
 ### `IStreamPipelineBehavior<TRequest, TResponse>`
 
-Source: [src/MediatR/IStreamPipelineBehavior.cs](../../src/MediatR/IStreamPipelineBehavior.cs).
+Source: [src/AN.MediatR/IStreamPipelineBehavior.cs](../../src/AN.MediatR/IStreamPipelineBehavior.cs).
 
 ```csharp
 public interface IStreamPipelineBehavior<in TRequest, TResponse> where TRequest : notnull
@@ -255,7 +255,7 @@ Stream pipeline equivalent of `IPipelineBehavior`. Compose by `await foreach`-in
 
 ---
 
-## Processor interfaces (namespace `MediatR.Pipeline`)
+## Processor interfaces (namespace `AN.MediatR.Pipeline`)
 
 ### `IRequestPreProcessor<TRequest>`
 
@@ -328,7 +328,7 @@ Mutable state object passed to exception handlers. Only one handler needs to cal
 
 ### `INotificationPublisher`
 
-Source: [src/MediatR/INotificationPublisher.cs](../../src/MediatR/INotificationPublisher.cs).
+Source: [src/AN.MediatR/INotificationPublisher.cs](../../src/AN.MediatR/INotificationPublisher.cs).
 
 ```csharp
 public interface INotificationPublisher
@@ -344,7 +344,7 @@ Strategy interface that decides **how** notification handlers are invoked (seque
 
 ### `NotificationHandlerExecutor`
 
-Source: [src/MediatR/NotificationHandlerExecutor.cs](../../src/MediatR/NotificationHandlerExecutor.cs).
+Source: [src/AN.MediatR/NotificationHandlerExecutor.cs](../../src/AN.MediatR/NotificationHandlerExecutor.cs).
 
 ```csharp
 public record NotificationHandlerExecutor(
@@ -358,9 +358,9 @@ Value object that pairs a handler instance with a closure that knows how to call
 
 ## Registration entity
 
-### `OpenBehavior` (namespace `MediatR.Entities`)
+### `OpenBehavior` (namespace `AN.MediatR.Entities`)
 
-Source: [src/MediatR/Entities/OpenBehavior.cs](../../src/MediatR/Entities/OpenBehavior.cs).
+Source: [src/AN.MediatR/Entities/OpenBehavior.cs](../../src/AN.MediatR/Entities/OpenBehavior.cs).
 
 ```csharp
 public class OpenBehavior
@@ -379,7 +379,7 @@ Value object used with `AddOpenBehaviors(IEnumerable<OpenBehavior>)` to register
 
 ### `MediatRServiceConfiguration`
 
-Source: [src/MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs](../../src/MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs).
+Source: [src/AN.MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs](../../src/AN.MediatR/MicrosoftExtensionsDI/MediatrServiceConfiguration.cs).
 
 The fluent configuration object passed to the `AddMediatR(cfg => ...)` action. Main properties:
 
@@ -423,7 +423,7 @@ Controls the registration order of `RequestExceptionActionProcessorBehavior<,>` 
 
 ### `ServiceCollectionExtensions`
 
-Source: [src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs](../../src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs).
+Source: [src/AN.MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs](../../src/AN.MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs).
 
 - `services.AddMediatR(Action<MediatRServiceConfiguration>)` — idiomatic registration entry point.
 - `services.AddMediatR(MediatRServiceConfiguration)` — overload accepting a prepared configuration.
@@ -434,11 +434,11 @@ Source: [src/MediatR/MicrosoftExtensionsDI/ServiceCollectionExtensions.cs](../..
 
 These types are `internal`, but understanding them helps when debugging or extending. See [Wrappers and Internals](12%20-%20Wrappers_and_Internals.md) for details.
 
-- `MediatR.Wrappers.RequestHandlerBase`, `RequestHandlerWrapper<TResponse>`, `RequestHandlerWrapper`, `RequestHandlerWrapperImpl<TRequest, TResponse>`, `RequestHandlerWrapperImpl<TRequest>`.
-- `MediatR.Wrappers.NotificationHandlerWrapper`, `NotificationHandlerWrapperImpl<TNotification>`.
-- `MediatR.Wrappers.StreamRequestHandlerBase`, `StreamRequestHandlerWrapper<TResponse>`, `StreamRequestHandlerWrapperImpl<TRequest, TResponse>`.
-- `MediatR.Internal.HandlersOrderer` — prioritizes exception handlers by assembly/namespace proximity.
-- `MediatR.Internal.ObjectDetails` — the `IComparer<ObjectDetails>` used by `HandlersOrderer`.
+- `AN.MediatR.Wrappers.RequestHandlerBase`, `RequestHandlerWrapper<TResponse>`, `RequestHandlerWrapper`, `RequestHandlerWrapperImpl<TRequest, TResponse>`, `RequestHandlerWrapperImpl<TRequest>`.
+- `AN.MediatR.Wrappers.NotificationHandlerWrapper`, `NotificationHandlerWrapperImpl<TNotification>`.
+- `AN.MediatR.Wrappers.StreamRequestHandlerBase`, `StreamRequestHandlerWrapper<TResponse>`, `StreamRequestHandlerWrapperImpl<TRequest, TResponse>`.
+- `AN.MediatR.Internal.HandlersOrderer` — prioritizes exception handlers by assembly/namespace proximity.
+- `AN.MediatR.Internal.ObjectDetails` — the `IComparer<ObjectDetails>` used by `HandlersOrderer`.
 
 ---
 
