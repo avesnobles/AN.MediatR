@@ -277,8 +277,19 @@ Si no coincide, la ejecución debe terminar antes del paso de `nuget push`.
 | `Build.ps1` | Pipeline local completo: limpiar, compilar, probar y empaquetar ambos paquetes. | Borra `artifacts/`; no inspecciona contenido ni publica símbolos. |
 | `BuildContracts.ps1` | Construir y empaquetar sólo contratos, con `ContinuousIntegrationBuild=true`. | No sustituye al build completo ni valida el paquete principal. |
 | `Push.ps1` | Base para un push autenticado usando `NUGET_URL` y `NUGET_API_KEY`. | Sin orden de dependencias, sin `.snupkg`, sin `--skip-duplicate` y con mensaje de error heredado que debe revisarse. |
+| `Publish.ps1` | Release segura desde el último tag estable alcanzable: crea un worktree temporal en el tag, ejecuta `Build.ps1`, valida los cuatro paquetes y los publica en orden. | Por defecto sólo valida. Requiere `-Publish` y una ruta UNC real; el valor por defecto `\\(server_ip)\nuget` es un marcador que debe sustituirse. |
 
 La mejora mínima recomendada para `Push.ps1` es recibir una versión o rutas explícitas, validar que existen los cuatro artefactos esperados, subir contratos antes que el principal y tratar los símbolos por separado. Esa modificación debe acompañarse de tests o una ejecución contra un feed de pruebas.
+
+Para un feed de carpeta compartida, el uso previsto del nuevo script es:
+
+```powershell
+# Validación completa del último tag, sin publicar.
+.\Publish.ps1 -NuGetSource "\\10.0.0.10\nuget"
+
+# Publicación tras revisar la validación. -Confirm:$false es útil en un runner automatizado.
+.\Publish.ps1 -NuGetSource "\\10.0.0.10\nuget" -Publish -Confirm:$false
+```
 
 ## 6. Lista de control de aprobación
 
