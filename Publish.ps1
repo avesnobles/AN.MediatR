@@ -65,6 +65,21 @@ function Assert-PackageExists {
     }
 }
 
+function Assert-NuGetSourceAvailable {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    try {
+        $isDirectory = Test-Path -LiteralPath $Path -PathType Container -ErrorAction Stop
+    }
+    catch {
+        throw "Cannot access NuGet source '$Path'. Verify the server address, the 'nuget' share, network connectivity, and permissions. $($_.Exception.Message)"
+    }
+
+    if (-not $isDirectory) {
+        throw "NuGet source does not exist or is not a folder: $Path. Verify the server address, the 'nuget' share, network connectivity, and permissions."
+    }
+}
+
 function Get-PackageContentHash {
     param([Parameter(Mandatory = $true)][string]$Path)
 
@@ -182,6 +197,10 @@ try {
         throw "NuGetSource still contains a placeholder: '$NuGetSource'. Supply the internal UNC path with -NuGetSource."
     }
 
+    if ($Publish) {
+        Assert-NuGetSourceAvailable -Path $NuGetSource
+    }
+
     Assert-CleanWorkingTree -RepositoryPath $repositoryRoot
 
     $releaseTag = Get-LatestStableReleaseTag -RepositoryPath $repositoryRoot
@@ -264,10 +283,6 @@ try {
         if (-not $Publish) {
             Write-Host 'Validation completed. No package was published. Re-run with -Publish to copy the packages to the NuGet source.'
             return
-        }
-
-        if (-not (Test-Path -LiteralPath $NuGetSource -PathType Container)) {
-            throw "The NuGet source is not available or is not a folder: $NuGetSource"
         }
 
         $packagesToPublish = @(
